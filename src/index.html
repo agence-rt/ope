@@ -6,11 +6,12 @@
 <title>AGOA OPE</title>
 <style>
 :root{
-  /* Charte agence — à confirmer : remplacer --rouge par le rouge exact de la gamme AGOA */
-  --rouge:#C8102E; --rouge-fonce:#9E0C24; --rouge-pale:#FBEAED;
-  --encre:#1F2328; --gris:#5C6670; --gris-clair:#9AA3AD; --trait:#E2E5E9;
-  --fond:#F4F5F7; --carte:#FFFFFF; --vert:#2E7D4F; --orange:#C77700; --bleu:#2B6CB0;
-  --ombre:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+  /* Charte AGOA (identique au launcher) */
+  --rouge:#B3261E; --rouge-fonce:#8E1E18; --rouge-pale:#F6E3E1;
+  --encre:#111111; --gris:#7A7A75; --gris-clair:#A8A69D; --trait:#D6D4CC;
+  --fond:#F3F2EE; --carte:#FAF9F6; --vert:#1E7A46; --orange:#B45F06; --bleu:#2563B8;
+  --vert-bg:#E1F2E7; --orange-bg:#FBEBD9; --bleu-bg:#E3ECF7; --gris-bg:#E8E6DF;
+  --ombre:none;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -18,14 +19,14 @@ body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif;color:var(--en
 button,input,select,textarea{font:inherit;color:inherit}
 
 /* Barre de titre type fenêtre Windows */
-.titlebar{height:40px;background:var(--rouge);color:#fff;display:flex;align-items:center;padding:0 0 0 12px;gap:10px;flex:none;user-select:none}
-.logo{width:26px;height:26px;border-radius:4px;background:#fff;color:var(--rouge);font-weight:800;font-size:11px;display:grid;place-items:center;letter-spacing:.3px}
+.titlebar{height:44px;background:var(--fond);border-bottom:1px solid var(--encre);color:var(--encre);display:flex;align-items:center;padding:0 0 0 12px;gap:10px;flex:none;user-select:none}
+.logo{width:26px;height:26px;border-radius:4px;background:var(--carte);color:var(--rouge);font-weight:800;font-size:11px;display:grid;place-items:center;letter-spacing:.3px}
 .titlebar .name{font-weight:600}
-.titlebar .sub{opacity:.8;font-size:12px}
+.titlebar .sub{color:var(--gris);font-size:12px}
 .spacer{flex:1}
-.mode{display:flex;align-items:center;gap:8px;font-size:12px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;cursor:pointer;border:0;color:#fff}
-.dot{width:8px;height:8px;border-radius:50%;background:#FFD27A}
-.dot.live{background:#7CF0A8}
+.mode{display:flex;align-items:center;gap:8px;font-size:12px;background:var(--gris-bg);padding:4px 10px;border-radius:999px;cursor:pointer;border:0;color:var(--encre)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.dot.live{background:var(--vert)}
 .wc{display:flex;height:100%}
 .wc span{width:46px;display:grid;place-items:center;font-size:13px;opacity:.85}
 .wc span:hover{background:rgba(0,0,0,.18)}
@@ -38,7 +39,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .colhead h2{margin:0 0 8px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);font-weight:700;display:flex;justify-content:space-between;align-items:center}
 .search{position:relative}
 .search input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--trait);border-radius:8px;background:var(--fond);outline:none}
-.search input:focus{border-color:var(--rouge);background:#fff;box-shadow:0 0 0 3px var(--rouge-pale)}
+.search input:focus{border-color:var(--rouge);background:var(--carte);box-shadow:0 0 0 3px var(--rouge-pale)}
 .search svg{position:absolute;left:10px;top:10px;width:16px;height:16px;stroke:var(--gris-clair);fill:none;stroke-width:2}
 .list{overflow:auto;flex:1}
 .item{padding:10px 16px;border-bottom:1px solid var(--trait);cursor:pointer;display:flex;gap:10px;align-items:flex-start}
@@ -50,17 +51,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 .empty{padding:28px 18px;color:var(--gris);text-align:center}
 
 .chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--fond);color:var(--gris);white-space:nowrap}
-.chip.attente{background:#FFF3DC;color:var(--orange)}
-.chip.cours{background:#E6F0FA;color:var(--bleu)}
-.chip.fini{background:#E3F3EA;color:var(--vert)}
+.chip.attente{background:var(--orange-bg);color:var(--orange)}
+.chip.cours{background:var(--bleu-bg);color:var(--bleu)}
+.chip.fini{background:var(--vert-bg);color:var(--vert)}
 .count{background:var(--fond);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--gris);font-weight:600}
 
-.btn{border:1px solid var(--trait);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
-.btn:hover{border-color:var(--gris-clair)}
-.btn.primary{background:var(--rouge);border-color:var(--rouge);color:#fff}
-.btn.primary:hover{background:var(--rouge-fonce)}
+.btn{border:1px solid var(--encre);background:var(--fond);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{background:var(--gris-bg)}
+.btn.primary{background:var(--encre);border-color:var(--encre);color:#fff}
+.btn.primary:hover{background:#333}
 .btn.sm{padding:3px 9px;font-size:12px}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--rouge)}
+.btn.ghost:hover{background:var(--rouge-pale)}
 
 /* Détail */
 .detail .wrap{padding:22px 26px 40px;max-width:980px}
@@ -83,12 +85,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 .phase .ph b{font-size:14px}
 .phase .ph .pct{margin-left:auto;font-weight:700;color:var(--rouge)}
 .steps{display:flex;flex-wrap:wrap;gap:6px}
-.step{border:1px solid var(--trait);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.step{border:1px solid var(--trait);background:var(--carte);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;display:flex;gap:6px;align-items:center}
 .step:hover{border-color:var(--gris-clair)}
 .step::before{content:"";width:9px;height:9px;border-radius:50%;border:2px solid var(--gris-clair)}
-.step.encours{border-color:var(--bleu);background:#F1F7FD}
+.step.encours{border-color:var(--bleu);background:var(--bleu-bg)}
 .step.encours::before{border-color:var(--bleu);background:linear-gradient(90deg,var(--bleu) 50%,transparent 50%)}
-.step.fait{background:#F1F9F4;border-color:#BFE0CB}
+.step.fait{background:var(--vert-bg);border-color:var(--vert)}
 .step.fait::before{border-color:var(--vert);background:var(--vert)}
 .hint{font-size:12px;color:var(--gris-clair);margin-top:8px}
 .money{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
@@ -102,7 +104,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Modales */
 .veil{position:fixed;inset:0;background:rgba(20,22,26,.45);display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
 .veil.on{display:flex}
-.modal{background:#fff;border-radius:12px;width:min(720px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal{background:var(--carte);border-radius:8px;width:min(720px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .modal header{padding:16px 20px;border-bottom:1px solid var(--trait);display:flex;align-items:center}
 .modal header h2{margin:0;font-size:17px}
 .modal header .x{margin-left:auto;cursor:pointer;color:var(--gris);font-size:20px;border:0;background:0}
@@ -114,14 +116,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
 .form .full{grid-column:1/-1}
 .form label{display:block;font-size:12px;font-weight:600;color:var(--gris);margin-bottom:3px}
-.form input,.form select,.form textarea{width:100%;padding:8px 10px;border:1px solid var(--trait);border-radius:8px;background:#fff;outline:none}
+.form input,.form select,.form textarea{width:100%;padding:8px 10px;border:1px solid var(--trait);border-radius:8px;background:var(--carte);outline:none}
 .form input:focus,.form select:focus,.form textarea:focus{border-color:var(--rouge);box-shadow:0 0 0 3px var(--rouge-pale)}
 .form textarea{min-height:70px;resize:vertical}
 .form .ro{background:var(--fond);font-weight:700}
 .sep{grid-column:1/-1;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);font-weight:700;margin-top:6px;border-top:1px solid var(--trait);padding-top:12px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--encre);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;z-index:20;pointer-events:none;max-width:90vw}
 .toast.on{opacity:1;transform:translateX(-50%)}
-.status{height:26px;flex:none;background:#fff;border-top:1px solid var(--trait);display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--gris);gap:16px}
+.status{height:26px;flex:none;background:var(--carte);border-top:1px solid var(--trait);display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--gris);gap:16px}
 .mono{font-family:Consolas,monospace;font-size:12px}
 @media (max-width:1100px){.app{grid-template-columns:240px 300px 1fr}}
 </style>
@@ -134,8 +136,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   <div class="sub">Opérations · Agence Rémi Thollet</div>
   <div class="spacer"></div>
   <button class="mode" id="modeBtn" title="Paramètres de connexion Ragic"><span class="dot" id="modeDot"></span><span id="modeTxt">Mode démo</span></button>
-  <div class="wc"><span>—</span><span>▢</span><span>✕</span></div>
-</div>
+  </div>
 
 <div class="app">
   <!-- 1. Immeubles -->
@@ -165,7 +166,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   </section>
 </div>
 
-<div class="status"><span id="stInfo">Données de démonstration</span><span class="spacer"></span><span id="stVer">v0.1 test</span></div>
+<div class="status"><span id="stInfo">Données de démonstration</span><span class="spacer"></span><span id="stVer">v0.1.0</span></div>
 
 <!-- Modale création -->
 <div class="veil" id="veil">
@@ -183,10 +184,10 @@ button,input,select,textarea{font:inherit;color:inherit}
     <header><h2>Connexion Ragic</h2><button class="x" id="cClose">×</button></header>
     <div class="body">
       <div class="form">
-        <div><label>Serveur Ragic</label><input id="cSrv" placeholder="www.ragic.com"></div>
+        <div><label>Serveur Ragic</label><input id="cSrv" placeholder="eu2.ragic.com"></div>
         <div><label>Compte</label><input id="cAcc" value="agoa"></div>
         <div class="full"><label>Clé API (stockée localement sur ce poste)</label><input id="cKey" type="password" placeholder="Clé API Ragic"></div>
-        <div class="full hint">Sans clé, l'application reste en mode démo : les créations sont gardées en mémoire locale uniquement et rien n'est envoyé à Ragic.</div>
+        <div class="full hint">La clé est normalement reprise du bouton CONNEXIONS du launcher. Sans clé, l'application reste en mode démo : les créations sont gardées en mémoire locale uniquement et rien n'est envoyé à Ragic.</div>
       </div>
     </div>
     <footer><button class="btn" id="cDemo">Revenir en démo</button><button class="btn primary" id="cSave">Enregistrer et charger</button></footer>
@@ -251,6 +252,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const eur=n=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n||0);
 let cfg={srv:"",acc:"agoa",key:""};
 try{cfg={...cfg,...JSON.parse(localStorage.getItem("agoaOpeCfg")||"{}")}}catch(e){}
+const IPC=window.agoa||null;   // présent dans l'application Windows (preload.js)
 let sel={imm:null,op:null,filter:"tous"};
 const live=()=>!!cfg.key;
 
@@ -414,19 +416,23 @@ async function saveForm(){
 function closeForm(){$("#veil").classList.remove("on")}
 
 /* ============ Ragic (mode connecté — à valider avec la clé API) ============ */
-function ragicUrl(k){return `https://${cfg.srv||"www.ragic.com"}/${cfg.acc}/${RAGIC[k].path}`}
+function ragicUrl(k){return `https://${cfg.srv||"eu2.ragic.com"}/${cfg.acc}/${RAGIC[k].path}`}
+async function ragicFetch(url,opt={}){
+  if(IPC&&IPC.ragic)return IPC.ragic({url,method:opt.method||"GET",headers:opt.headers||{},body:opt.body?String(opt.body):undefined});
+  const r=await fetch(url,opt);return {ok:r.ok,status:r.status,json:await r.json().catch(()=>({}))};
+}
 async function ragicPost(kind,vals){
   const f=RAGIC[kind].f,body=new URLSearchParams();
   Object.entries(vals).forEach(([k,v])=>{if(f[k]&&v!==undefined&&v!=="")body.append(f[k],v)});
-  const r=await fetch(ragicUrl(kind)+"?api&v=3",{method:"POST",headers:{Authorization:"Basic "+cfg.key,"Content-Type":"application/x-www-form-urlencoded"},body});
+  const r=await ragicFetch(ragicUrl(kind)+"?api&v=3",{method:"POST",headers:{Authorization:"Basic "+cfg.key,"Content-Type":"application/x-www-form-urlencoded"},body});
   if(!r.ok)throw new Error("Ragic "+r.status);
 }
 async function loadLive(){
   try{
     const h={Authorization:"Basic "+cfg.key};
     const [ri,ro]=await Promise.all([
-      fetch(ragicUrl("immeubles")+"?api&v=3&limit=2000",{headers:h}).then(r=>r.json()),
-      fetch(ragicUrl("operations")+"?api&v=3&limit=2000",{headers:h}).then(r=>r.json())]);
+      ragicFetch(ragicUrl("immeubles")+"?api&v=3&limit=2000",{headers:h}).then(r=>{if(!r.ok)throw new Error("Ragic "+r.status);return r.json}),
+      ragicFetch(ragicUrl("operations")+"?api&v=3&limit=2000",{headers:h}).then(r=>{if(!r.ok)throw new Error("Ragic "+r.status);return r.json})]);
     const g=(r,l)=>r[l]??"";
     DB.immeubles=Object.values(ri).map(r=>({code:g(r,"code"),adresse:g(r,"adresse"),syndic:g(r,"syndic"),gestionnaire:g(r,"gestionnaire"),moa:g(r,"maitre d'ouvrage"),lots:g(r,"Nbr Lots")}));
     DB.operations=Object.values(ro).map(r=>op(g(r,"CODE TRAVAUX")||g(r,"Code travaux"),g(r,"Immeuble")||g(r,"immeuble"),g(r,"Indice"),g(r,"Objet"),g(r,"Description"),g(r,"Statut")||"attente",g(r,"Date proposition"),{ph1:+g(r,"phase1")||0,ph2:+g(r,"phase2")||0,ph3pct:+g(r,"phase3 %")||0,estimatif:+g(r,"Estimatif travaux HT")||0}));
@@ -438,6 +444,13 @@ async function loadLive(){
 /* ============ Divers ============ */
 function persist(){try{localStorage.setItem("agoaOpeDemo",JSON.stringify(DB))}catch(e){}}
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
+async function initConnections(){
+  // Clés partagées du launcher (CONNEXIONS) : variables AGOA_RAGIC_* ou fichier chiffré
+  try{
+    const c=IPC&&IPC.connections?await IPC.connections():null;
+    if(c&&c.ragic&&c.ragic.key){cfg={srv:c.ragic.host||"eu2.ragic.com",acc:c.ragic.apname||"agoa",key:c.ragic.key};}
+  }catch(e){}
+}
 function setMode(){
   $("#modeDot").classList.toggle("live",live());
   $("#modeTxt").textContent=live()?"Ragic connecté":"Mode démo";
@@ -461,8 +474,7 @@ $("#cSave").onclick=()=>{cfg={srv:$("#cSrv").value.trim(),acc:$("#cAcc").value.t
 $("#cDemo").onclick=()=>{cfg.key="";localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg));$("#veilCfg").classList.remove("on");setMode()};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#veilCfg").classList.remove("on")}if(e.ctrlKey&&e.key.toLowerCase()==="f"){e.preventDefault();$("#q").focus()}});
 
-setMode();renderImm();
-if(live())loadLive();
+(async()=>{await initConnections();setMode();renderImm();if(live())loadLive();})();
 </script>
 </body>
 </html>

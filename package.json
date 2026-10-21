@@ -8,17 +8,22 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --publish never",
-    "release": "electron-builder --win --publish always"
+    "dist": "electron-builder --win --publish never"
   },
-  "dependencies": { "electron-updater": "^6.3.9" },
   "devDependencies": { "electron": "^33.2.0", "electron-builder": "^25.1.8" },
   "build": {
     "appId": "fr.remithollet.agoa.ope",
     "productName": "AGOA OPE",
     "files": ["src/**/*", "package.json"],
+    "directories": { "output": "dist" },
     "win": { "target": "nsis", "icon": "build/icon.ico" },
-    "nsis": { "oneClick": true, "perMachine": false, "runAfterFinish": true },
-    "publish": [{ "provider": "github", "owner": "agence-rt", "repo": "ope" }]
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "AGOA-OPE-Setup-${version}.exe",
+      "shortcutName": "AGOA OPE",
+      "runAfterFinish": false
+    }
   }
 }

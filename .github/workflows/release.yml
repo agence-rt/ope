@@ -1,15 +1,40 @@
-name: Release
+# Construit l'installateur AGOA OPE et publie la Release dès que "version" change dans package.json (main).
+# Le launcher (agence-rt/agoa) lit la dernière Release et met l'application à jour.
+name: Publication AGOA OPE
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+    paths: ["package.json", "src/**", "build/**", ".github/workflows/release.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   windows:
     runs-on: windows-latest
-    permissions: { contents: write }
     steps:
       - uses: actions/checkout@v4
+      - name: Version à publier
+        id: v
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VERSION" > /dev/null 2>&1; then echo "skip=true" >> "$GITHUB_OUTPUT"; else echo "skip=false" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/setup-node@v4
+        if: steps.v.outputs.skip == 'false'
         with: { node-version: 20 }
-      - run: npm ci || npm install
-      - run: npm run release
-        env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - name: Installateur
+        if: steps.v.outputs.skip == 'false'
+        run: |
+          npm install
+          npm run dist
+      - name: Publication
+        if: steps.v.outputs.skip == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.v.outputs.version }}" "dist/AGOA-OPE-Setup-${{ steps.v.outputs.version }}.exe" \
+            --title "AGOA OPE ${{ steps.v.outputs.version }}" --generate-notes --target "${{ github.sha }}"
