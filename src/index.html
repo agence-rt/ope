@@ -169,7 +169,7 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
   </section>
   <section class="col detail" id="detail"></section>
 </div>
-<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.2.0</span></div>
+<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.2.1</span></div>
 
 <div class="veil" id="veil"><div class="modal">
   <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
@@ -226,7 +226,9 @@ let DB={imm:[],ops:[]}, sel={imm:null,op:null,filter:"ouvertes"}, cache={}, load
 /* ===== Accès Ragic ===== */
 const base=()=>`https://${cfg.srv||"eu2.ragic.com"}/${cfg.acc||"agoa"}`;
 async function rg(url,opt={}){
-  const o={method:opt.method||"GET",headers:{Authorization:"Basic "+cfg.key,...(opt.headers||{})},body:opt.body};
+  // Authentification identique au launcher : paramètre APIKey dans l'URL
+  url+=(url.includes("?")?"&":"?")+"APIKey="+encodeURIComponent(cfg.key);
+  const o={method:opt.method||"GET",headers:{...(opt.headers||{})},body:opt.body};
   let r;
   if(IPC&&IPC.ragic)r=await IPC.ragic({url,method:o.method,headers:o.headers,body:o.body?String(o.body):undefined});
   else{const x=await fetch(url,o);r={ok:x.ok,status:x.status,json:await x.json().catch(()=>({}))}}
