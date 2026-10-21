@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AGOA OPE</title>
+<style>
+:root{
+  /* Charte agence — à confirmer : remplacer --rouge par le rouge exact de la gamme AGOA */
+  --rouge:#C8102E; --rouge-fonce:#9E0C24; --rouge-pale:#FBEAED;
+  --encre:#1F2328; --gris:#5C6670; --gris-clair:#9AA3AD; --trait:#E2E5E9;
+  --fond:#F4F5F7; --carte:#FFFFFF; --vert:#2E7D4F; --orange:#C77700; --bleu:#2B6CB0;
+  --ombre:0 1px 2px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif;color:var(--encre);background:var(--fond);display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* Barre de titre type fenêtre Windows */
+.titlebar{height:40px;background:var(--rouge);color:#fff;display:flex;align-items:center;padding:0 0 0 12px;gap:10px;flex:none;user-select:none}
+.logo{width:26px;height:26px;border-radius:4px;background:#fff;color:var(--rouge);font-weight:800;font-size:11px;display:grid;place-items:center;letter-spacing:.3px}
+.titlebar .name{font-weight:600}
+.titlebar .sub{opacity:.8;font-size:12px}
+.spacer{flex:1}
+.mode{display:flex;align-items:center;gap:8px;font-size:12px;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;cursor:pointer;border:0;color:#fff}
+.dot{width:8px;height:8px;border-radius:50%;background:#FFD27A}
+.dot.live{background:#7CF0A8}
+.wc{display:flex;height:100%}
+.wc span{width:46px;display:grid;place-items:center;font-size:13px;opacity:.85}
+.wc span:hover{background:rgba(0,0,0,.18)}
+
+/* Disposition */
+.app{flex:1;display:grid;grid-template-columns:300px 360px 1fr;min-height:0}
+.col{background:var(--carte);border-right:1px solid var(--trait);display:flex;flex-direction:column;min-height:0}
+.col.detail{background:var(--fond);border-right:0;overflow:auto}
+.colhead{padding:14px 16px 10px;border-bottom:1px solid var(--trait);flex:none}
+.colhead h2{margin:0 0 8px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.search{position:relative}
+.search input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--trait);border-radius:8px;background:var(--fond);outline:none}
+.search input:focus{border-color:var(--rouge);background:#fff;box-shadow:0 0 0 3px var(--rouge-pale)}
+.search svg{position:absolute;left:10px;top:10px;width:16px;height:16px;stroke:var(--gris-clair);fill:none;stroke-width:2}
+.list{overflow:auto;flex:1}
+.item{padding:10px 16px;border-bottom:1px solid var(--trait);cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+.item:hover{background:var(--fond)}
+.item.sel{background:var(--rouge-pale);box-shadow:inset 3px 0 0 var(--rouge)}
+.item .t{font-weight:600}
+.item .s{font-size:12px;color:var(--gris)}
+.item .badge{margin-left:auto;flex:none}
+.empty{padding:28px 18px;color:var(--gris);text-align:center}
+
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--fond);color:var(--gris);white-space:nowrap}
+.chip.attente{background:#FFF3DC;color:var(--orange)}
+.chip.cours{background:#E6F0FA;color:var(--bleu)}
+.chip.fini{background:#E3F3EA;color:var(--vert)}
+.count{background:var(--fond);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--gris);font-weight:600}
+
+.btn{border:1px solid var(--trait);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--gris-clair)}
+.btn.primary{background:var(--rouge);border-color:var(--rouge);color:#fff}
+.btn.primary:hover{background:var(--rouge-fonce)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--rouge)}
+
+/* Détail */
+.detail .wrap{padding:22px 26px 40px;max-width:980px}
+.dh{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.dh h1{margin:0;font-size:22px;letter-spacing:-.01em}
+.dh .obj{color:var(--gris);margin-top:2px}
+.card{background:var(--carte);border:1px solid var(--trait);border-radius:10px;box-shadow:var(--ombre);padding:16px 18px;margin-bottom:14px}
+.card h3{margin:0 0 12px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px 22px}
+.kv label{display:block;font-size:11px;color:var(--gris-clair);text-transform:uppercase;letter-spacing:.05em}
+.kv div{font-weight:500;word-break:break-word}
+.kv .muted{color:var(--gris-clair);font-weight:400}
+
+.global{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar{height:8px;background:var(--trait);border-radius:99px;overflow:hidden;flex:1}
+.bar i{display:block;height:100%;background:var(--rouge);border-radius:99px;transition:width .3s}
+.phase{border-top:1px solid var(--trait);padding:12px 0}
+.phase:first-of-type{border-top:0;padding-top:0}
+.phase .ph{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.phase .ph b{font-size:14px}
+.phase .ph .pct{margin-left:auto;font-weight:700;color:var(--rouge)}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.step{border:1px solid var(--trait);background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.step:hover{border-color:var(--gris-clair)}
+.step::before{content:"";width:9px;height:9px;border-radius:50%;border:2px solid var(--gris-clair)}
+.step.encours{border-color:var(--bleu);background:#F1F7FD}
+.step.encours::before{border-color:var(--bleu);background:linear-gradient(90deg,var(--bleu) 50%,transparent 50%)}
+.step.fait{background:#F1F9F4;border-color:#BFE0CB}
+.step.fait::before{border-color:var(--vert);background:var(--vert)}
+.hint{font-size:12px;color:var(--gris-clair);margin-top:8px}
+.money{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.money div{background:var(--fond);border-radius:8px;padding:8px 12px}
+.money label{display:block;font-size:11px;color:var(--gris-clair);text-transform:uppercase;letter-spacing:.05em}
+.money b{font-size:16px}
+
+.placeholder{height:100%;display:grid;place-items:center;color:var(--gris);text-align:center;padding:40px}
+.placeholder .big{font-size:40px;color:var(--rouge);font-weight:800;letter-spacing:-.02em}
+
+/* Modales */
+.veil{position:fixed;inset:0;background:rgba(20,22,26,.45);display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
+.veil.on{display:flex}
+.modal{background:#fff;border-radius:12px;width:min(720px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal header{padding:16px 20px;border-bottom:1px solid var(--trait);display:flex;align-items:center}
+.modal header h2{margin:0;font-size:17px}
+.modal header .x{margin-left:auto;cursor:pointer;color:var(--gris);font-size:20px;border:0;background:0}
+.modal .body{padding:18px 20px;overflow:auto}
+.modal footer{padding:12px 20px;border-top:1px solid var(--trait);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--trait)}
+.tab{padding:10px 14px;cursor:pointer;color:var(--gris);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--rouge);border-color:var(--rouge)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.form .full{grid-column:1/-1}
+.form label{display:block;font-size:12px;font-weight:600;color:var(--gris);margin-bottom:3px}
+.form input,.form select,.form textarea{width:100%;padding:8px 10px;border:1px solid var(--trait);border-radius:8px;background:#fff;outline:none}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--rouge);box-shadow:0 0 0 3px var(--rouge-pale)}
+.form textarea{min-height:70px;resize:vertical}
+.form .ro{background:var(--fond);font-weight:700}
+.sep{grid-column:1/-1;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);font-weight:700;margin-top:6px;border-top:1px solid var(--trait);padding-top:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--encre);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;z-index:20;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.status{height:26px;flex:none;background:#fff;border-top:1px solid var(--trait);display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--gris);gap:16px}
+.mono{font-family:Consolas,monospace;font-size:12px}
+@media (max-width:1100px){.app{grid-template-columns:240px 300px 1fr}}
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="logo">OPE</div>
+  <div class="name">AGOA OPE</div>
+  <div class="sub">Opérations · Agence Rémi Thollet</div>
+  <div class="spacer"></div>
+  <button class="mode" id="modeBtn" title="Paramètres de connexion Ragic"><span class="dot" id="modeDot"></span><span id="modeTxt">Mode démo</span></button>
+  <div class="wc"><span>—</span><span>▢</span><span>✕</span></div>
+</div>
+
+<div class="app">
+  <!-- 1. Immeubles -->
+  <section class="col">
+    <div class="colhead">
+      <h2>Immeubles <button class="btn sm ghost" id="newImm">+ Nouveau</button></h2>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" placeholder="Code, adresse, syndic…" autocomplete="off" autofocus>
+      </div>
+    </div>
+    <div class="list" id="immList"></div>
+  </section>
+
+  <!-- 2. Opérations de l'immeuble -->
+  <section class="col">
+    <div class="colhead">
+      <h2><span id="opTitle">Opérations</span> <button class="btn sm ghost" id="newOp">+ Nouvelle</button></h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="filters"></div>
+    </div>
+    <div class="list" id="opList"><div class="empty">Sélectionnez un immeuble.</div></div>
+  </section>
+
+  <!-- 3. Fiche -->
+  <section class="col detail" id="detail">
+    <div class="placeholder"><div><div class="big">AGOA OPE</div><p>Recherchez un immeuble, puis choisissez une opération<br>pour afficher sa fiche et l'avancement des phases.</p></div></div>
+  </section>
+</div>
+
+<div class="status"><span id="stInfo">Données de démonstration</span><span class="spacer"></span><span id="stVer">v0.1 test</span></div>
+
+<!-- Modale création -->
+<div class="veil" id="veil">
+  <div class="modal">
+    <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
+    <div class="tabs" id="mTabs"></div>
+    <div class="body" id="mBody"></div>
+    <footer><span class="hint" id="mHint" style="margin-right:auto"></span><button class="btn" id="mCancel">Annuler</button><button class="btn primary" id="mSave">Créer</button></footer>
+  </div>
+</div>
+
+<!-- Modale paramètres -->
+<div class="veil" id="veilCfg">
+  <div class="modal">
+    <header><h2>Connexion Ragic</h2><button class="x" id="cClose">×</button></header>
+    <div class="body">
+      <div class="form">
+        <div><label>Serveur Ragic</label><input id="cSrv" placeholder="www.ragic.com"></div>
+        <div><label>Compte</label><input id="cAcc" value="agoa"></div>
+        <div class="full"><label>Clé API (stockée localement sur ce poste)</label><input id="cKey" type="password" placeholder="Clé API Ragic"></div>
+        <div class="full hint">Sans clé, l'application reste en mode démo : les créations sont gardées en mémoire locale uniquement et rien n'est envoyé à Ragic.</div>
+      </div>
+    </div>
+    <footer><button class="btn" id="cDemo">Revenir en démo</button><button class="btn primary" id="cSave">Enregistrer et charger</button></footer>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Correspondance avec Ragic (compte agoa) ============ */
+const RAGIC = {
+  operations: { path:"operations/10", f:{
+    code:1000295, immeuble:1000278, indice:1000279, objet:1000280, description:1000281,
+    dateProp:1000282, estimatif:1000286, ph1:1000283, ph2:1000284, ph3pct:1000285,
+    syndic:1000763, gestionnaire:1000765, statut:1003061, avancement:1001618 } },
+  immeubles: { path:"agoa/3", f:{
+    code:1000020, adresse:1000021, cp:1000833, moa:1000034, syndic:1000035,
+    gestionnaire:1000036, email:1000850, assistante:1000037, lots:2000013 } }
+};
+
+/* ============ Phases (déroulé agence) ============ */
+const PHASES = [
+  {k:"P1", label:"Phase 1 — Visite & rapport", steps:["Visite de site","Expertise","Rapport"]},
+  {k:"P2", label:"Phase 2 — Conception & consultation", steps:["APS","APD","DCE","Analyse des offres"]},
+  {k:"P3", label:"Phase 3 — Travaux", steps:["DPC","MDT","VISA","DET","AOR","DOE"]}
+];
+const ETATS=["afaire","encours","fait"];
+
+/* ============ Données de démonstration ============ */
+/* Immeubles et opérations « attente » issus de Ragic ; les opérations en cours sont fictives pour la démo. */
+let DB = {
+  immeubles:[
+    {code:"JEANNED'ARC29",adresse:"29 place Jeanne d'Arc 75013 Paris",syndic:"BR COPROPRIETE",gestionnaire:"Alexis LEMAIRE",moa:"SDC du",lots:""},
+    {code:"STJACQUES81",adresse:"81 rue du Faubourg Saint Jacques 75014 Paris",syndic:"CABINET MICHAU",gestionnaire:"Marie-Aude GIRODET",moa:"SDC du",lots:""},
+    {code:"STDIDIER55/57",adresse:"55/57 rue Saint Didier 75116 Paris",syndic:"CABINET GAURIAU",gestionnaire:"Olivier GAURIAU",moa:"SDC du",lots:""},
+    {code:"ROGER11",adresse:"11 rue Roger 75014 Paris",syndic:"CABINET MICHAU",gestionnaire:"Fabrice BOUNIOL",moa:"SDC du",lots:"10"},
+    {code:"HOFF4Bis",adresse:"4 bis rue du Sergent Hoff 75017 Paris",syndic:"ORALIA GARREAU MAILLET",gestionnaire:"François FLAMENT",moa:"SDC du",lots:""},
+    {code:"MEUNIERS5",adresse:"5 rue des Meuniers 94300 Vincennes",syndic:"FONCIA VAL DE MARNE",gestionnaire:"Jérôme COUSIN",moa:"SDC du",lots:""},
+    {code:"PHALSBOURG8(cité)",adresse:"8 cité de Phalsbourg 75014 Paris",syndic:"FONCIA PARIS RIVE DROITE",gestionnaire:"Vincent ALCOLEA",moa:"SDC du",lots:""}
+  ],
+  operations:[
+    op("JEANNED'ARC29-B1","JEANNED'ARC29","B1","TRAVAUX DE REFECTION DE LA COUR & DES BÂTIMENTS ANNEXES","Mission d'étude, appel d'offres et suivi des travaux de réfection de la cour avec étanchéité, ravalement du mur mitoyen, création d'un local poubelle conforme et reconstruction de l'annexe.","attente","2026/10/20"),
+    op("JEANNED'ARC29-B2","JEANNED'ARC29","B2","TRAVAUX DE RENOVATION DE LA LOGE ET DU SAS COUR","Rénovation de la loge et du sas d'accès à la cour et aux caves.","attente","2026/10/20"),
+    op("JEANNED'ARC29-B3","JEANNED'ARC29","B3","TRAVAUX D'ENTRETIEN ET DE MISE AUX NORMES DES CAVES","Mission d'étude, appel d'offres et suivi des travaux d'entretien et de mise aux normes des caves.","attente","2026/10/20"),
+    op("JEANNED'ARC29-B4","JEANNED'ARC29","B4","TRAVAUX DE RAVALEMENT DE LA FACADE SUR RUE","Mission d'étude, appel d'offres et suivi des travaux de ravalement de la façade sur rue.","attente","2026/10/20"),
+    op("JEANNED'ARC29-B5","JEANNED'ARC29","B5","TRAVAUX DE RAVALEMENT DE LA FACADE SUR COUR","Mission d'étude, appel d'offres et suivi des travaux de ravalement de la façade sur cour.","attente","2026/10/20"),
+    op("STJACQUES81-ZD","STJACQUES81","ZD","RENOVATION DES MENUISERIES EXTERIEURES DE LA CAGE D'ESCALIER D","Rénovation et entretien des menuiseries extérieures de la cage d'escalier D.","attente","2026/10/20"),
+    op("STJACQUES81-ZE","STJACQUES81","ZE","RENOVATION DES MENUISERIES EXTERIEURES DES CAGES D'ESCALIER A B C et D","Rénovation et entretien des menuiseries extérieures des cages A à D.","attente","2026/10/20"),
+    op("STDIDIER55/57-D","STDIDIER55/57","D","MURET RUE","Problématiques liées à la présence d'arbres accolés au muret rue.","attente",""),
+    /* fictives pour montrer l'avancement */
+    op("ROGER11-A","ROGER11","A","RAVALEMENT DES FAÇADES SUR RUE ET COUR (exemple)","Exemple fictif : mission complète étude, consultation, suivi.","cours","2026/03/12",{ph1:3200,ph2:5400,ph3pct:4.5,estimatif:180000,etats:{"P1":["fait","fait","fait"],"P2":["fait","fait","encours","afaire"],"P3":["afaire","afaire","afaire","afaire","afaire","afaire"]}}),
+    op("ROGER11-B","ROGER11","B","REFECTION DE LA TOITURE (exemple)","Exemple fictif : couverture zinc, dépose-repose des lucarnes.","cours","2026/05/02",{ph1:1800,ph2:3600,ph3pct:5,estimatif:96000,etats:{"P1":["fait","fait","fait"],"P2":["fait","fait","fait","fait"],"P3":["fait","fait","encours","encours","afaire","afaire"]}})
+  ]
+};
+function op(code,immeuble,indice,objet,description,statut,dateProp,x={}){
+  const etats=x.etats||{P1:["afaire","afaire","afaire"],P2:["afaire","afaire","afaire","afaire"],P3:["afaire","afaire","afaire","afaire","afaire","afaire"]};
+  return {code,immeuble,indice,objet,description,statut,dateProp,ph1:x.ph1||0,ph2:x.ph2||0,ph3pct:x.ph3pct||0,estimatif:x.estimatif||0,etats};
+}
+
+/* ============ État ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const eur=n=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n||0);
+let cfg={srv:"",acc:"agoa",key:""};
+try{cfg={...cfg,...JSON.parse(localStorage.getItem("agoaOpeCfg")||"{}")}}catch(e){}
+let sel={imm:null,op:null,filter:"tous"};
+const live=()=>!!cfg.key;
+
+/* ============ Rendu ============ */
+function statutClass(s){return s==="attente"?"attente":s==="fini"||s==="terminé"?"fini":"cours"}
+function statutLabel(s){return ({attente:"En attente",cours:"En cours",fini:"Terminé"})[s]||s||"—"}
+function progress(o){
+  let t=0,d=0;
+  PHASES.forEach(p=>p.steps.forEach((_,i)=>{t+=2;const e=(o.etats[p.k]||[])[i];d+=e==="fait"?2:e==="encours"?1:0}));
+  return Math.round(d/t*100);
+}
+function phasePct(o,p){
+  const a=o.etats[p.k]||[];let d=0;p.steps.forEach((_,i)=>{d+=a[i]==="fait"?2:a[i]==="encours"?1:0});
+  return Math.round(d/(p.steps.length*2)*100);
+}
+function renderImm(){
+  const q=$("#q").value.trim().toLowerCase();
+  const rows=DB.immeubles.filter(i=>!q||[i.code,i.adresse,i.syndic,i.gestionnaire].join(" ").toLowerCase().includes(q));
+  $("#immList").innerHTML=rows.length?rows.map(i=>{
+    const ops=DB.operations.filter(o=>o.immeuble===i.code);
+    const enc=ops.filter(o=>o.statut!=="fini").length;
+    return `<div class="item ${sel.imm===i.code?"sel":""}" data-imm="${esc(i.code)}"><div><div class="t">${esc(i.code)}</div><div class="s">${esc(i.adresse)}</div><div class="s">${esc(i.syndic)}</div></div>${enc?`<span class="badge count">${enc}</span>`:""}</div>`;
+  }).join(""):`<div class="empty">Aucun immeuble.<br><button class="btn sm" id="emptyNew" style="margin-top:8px">Créer « ${esc($("#q").value)} »</button></div>`;
+  const en=$("#emptyNew"); if(en) en.onclick=()=>openForm("imm",{code:$("#q").value.toUpperCase().replace(/\s+/g,"")});
+}
+function renderOps(){
+  const i=sel.imm; const el=$("#opList");
+  if(!i){el.innerHTML='<div class="empty">Sélectionnez un immeuble.</div>';$("#filters").innerHTML="";$("#opTitle").textContent="Opérations";return}
+  $("#opTitle").textContent="Opérations · "+i;
+  const all=DB.operations.filter(o=>o.immeuble===i);
+  $("#filters").innerHTML=[["tous","Toutes"],["cours","En cours"],["attente","En attente"],["fini","Terminées"]].map(([k,l])=>`<button class="btn sm ${sel.filter===k?"primary":""}" data-f="${k}">${l}</button>`).join("");
+  const rows=all.filter(o=>sel.filter==="tous"||o.statut===sel.filter);
+  el.innerHTML=rows.length?rows.map(o=>`<div class="item ${sel.op===o.code?"sel":""}" data-op="${esc(o.code)}"><div style="min-width:0;flex:1"><div class="t">${esc(o.code)} <span class="chip ${statutClass(o.statut)}">${statutLabel(o.statut)}</span></div><div class="s">${esc(o.objet)}</div><div class="bar" style="margin-top:6px;height:5px"><i style="width:${progress(o)}%"></i></div></div></div>`).join(""):`<div class="empty">Aucune opération pour ce filtre.</div>`;
+}
+function renderDetail(){
+  const o=DB.operations.find(x=>x.code===sel.op); const el=$("#detail");
+  if(!o)return;
+  const im=DB.immeubles.find(x=>x.code===o.immeuble)||{};
+  const ph3=(o.estimatif||0)*(o.ph3pct||0)/100;
+  const ht=(o.ph1||0)+(o.ph2||0)+ph3, tva=ht*.2;
+  el.innerHTML=`<div class="wrap">
+    <div class="dh"><div style="flex:1"><h1>${esc(o.code)} <span class="chip ${statutClass(o.statut)}">${statutLabel(o.statut)}</span></h1><div class="obj">${esc(o.objet)}</div></div>
+      <button class="btn" id="editOp">Modifier</button><button class="btn primary" id="newProp">Proposition d'honoraires</button></div>
+    <div class="card"><h3>Avancement</h3>
+      <div class="global"><b style="font-size:20px;color:var(--rouge)">${progress(o)} %</b><div class="bar"><i style="width:${progress(o)}%"></i></div></div>
+      ${PHASES.map(p=>`<div class="phase"><div class="ph"><b>${p.label}</b><span class="pct">${phasePct(o,p)} %</span></div>
+        <div class="steps">${p.steps.map((s,i)=>`<div class="step ${(o.etats[p.k]||[])[i]||"afaire"}" data-p="${p.k}" data-i="${i}">${s}</div>`).join("")}</div></div>`).join("")}
+      <div class="hint">Cliquer sur une étape : à faire → en cours → fait.</div></div>
+    <div class="card"><h3>Opération</h3><div class="kv">
+      ${kv("Code",o.code)}${kv("Indice",o.indice)}${kv("Date de proposition",o.dateProp)}${kv("Immeuble",o.immeuble)}${kv("Syndic",im.syndic)}${kv("Gestionnaire",im.gestionnaire)}
+      <div style="grid-column:1/-1"><label>Description</label><div>${esc(o.description)||'<span class="muted">—</span>'}</div></div></div></div>
+    <div class="card"><h3>Honoraires</h3><div class="money">
+      <div><label>Phase 1</label><b>${eur(o.ph1)}</b></div><div><label>Phase 2</label><b>${eur(o.ph2)}</b></div>
+      <div><label>Phase 3 (${o.ph3pct||0} %)</label><b>${eur(ph3)}</b></div><div><label>Total HT</label><b>${eur(ht)}</b></div>
+      <div><label>Total TTC</label><b>${eur(ht+tva)}</b></div></div>
+      <div class="hint">Estimatif travaux HT : ${eur(o.estimatif)}</div></div>
+  </div>`;
+  $("#editOp").onclick=()=>openForm("op",o);
+  $("#newProp").onclick=()=>openForm("op",{...o,_prop:true});
+  el.querySelectorAll(".step").forEach(s=>s.onclick=()=>{
+    const a=o.etats[s.dataset.p],i=+s.dataset.i;a[i]=ETATS[(ETATS.indexOf(a[i]||"afaire")+1)%3];
+    if(o.statut==="attente"&&progress(o)>0)o.statut="cours";
+    persist();renderOps();renderDetail();
+    toast(live()?"Avancement modifié (envoi Ragic à brancher)":"Avancement modifié (démo)");
+  });
+}
+function kv(l,v){return `<div><label>${l}</label><div>${v?esc(v):'<span class="muted">—</span>'}</div></div>`}
+
+/* ============ Formulaires de création ============ */
+let form={type:null,data:{},tab:"op"};
+function openForm(type,data={}){
+  form={type,data:{...data},tab:data._prop?"prop":type};
+  $("#veil").classList.add("on"); drawForm();
+}
+function drawForm(){
+  const {type,data}=form;
+  const tabs=type==="imm"?[["imm","Immeuble"]]:[["op","Opération"],["prop","Proposition d'honoraires"]];
+  $("#mTabs").innerHTML=tabs.length>1?tabs.map(([k,l])=>`<div class="tab ${form.tab===k?"on":""}" data-t="${k}">${l}</div>`).join(""):"";
+  $("#mTitle").textContent=type==="imm"?"Nouvel immeuble":(data.code&&DB.operations.some(o=>o.code===data.code)?"Modifier l'opération":"Nouvelle opération");
+  const immOpts=DB.immeubles.map(i=>`<option ${data.immeuble===i.code?"selected":""}>${esc(i.code)}</option>`).join("");
+  let h="";
+  if(form.tab==="imm"){
+    h=`<div class="form">
+      <div><label>Code immeuble</label><input data-k="code" value="${esc(data.code)}" placeholder="ex. ROGER11"></div>
+      <div><label>Maître d'ouvrage</label><input data-k="moa" value="${esc(data.moa||"SDC du")}"></div>
+      <div class="full"><label>Adresse</label><input data-k="adresse" value="${esc(data.adresse)}"></div>
+      <div><label>Syndic</label><input data-k="syndic" value="${esc(data.syndic)}"></div>
+      <div><label>Gestionnaire</label><input data-k="gestionnaire" value="${esc(data.gestionnaire)}"></div>
+      <div><label>Nombre de lots</label><input data-k="lots" type="number" value="${esc(data.lots)}"></div></div>`;
+    $("#mHint").textContent="Base : BASE DE DONNÉES › Immeubles";
+  }else if(form.tab==="op"){
+    h=`<div class="form">
+      <div><label>Immeuble</label><select data-k="immeuble">${immOpts}</select></div>
+      <div><label>Indice</label><input data-k="indice" value="${esc(data.indice)}" placeholder="ex. A, B1, ZE"></div>
+      <div class="full"><label>Objet</label><input data-k="objet" value="${esc(data.objet)}" placeholder="TRAVAUX DE …"></div>
+      <div class="full"><label>Description</label><textarea data-k="description" placeholder="Mission d'étude, appel d'offres et suivi des travaux de …">${esc(data.description)}</textarea></div>
+      <div><label>Statut</label><select data-k="statut">${["attente","cours","fini"].map(s=>`<option value="${s}" ${(data.statut||"attente")===s?"selected":""}>${statutLabel(s)}</option>`).join("")}</select></div>
+      <div><label>Code travaux (auto)</label><input class="ro" readonly id="codeAuto" value="${esc(data.code||"")}"></div></div>`;
+    $("#mHint").textContent="Base : OPERATIONS";
+  }else{
+    h=`<div class="form">
+      <div><label>Date de proposition</label><input data-k="dateProp" value="${esc(data.dateProp||new Date().toISOString().slice(0,10).replace(/-/g,"/"))}"></div>
+      <div><label>Estimatif travaux HT (€)</label><input data-k="estimatif" type="number" value="${data.estimatif||""}"></div>
+      <div class="sep">Honoraires d'études</div>
+      <div><label>Phase 1 — visite & rapport HT (€)</label><input data-k="ph1" type="number" value="${data.ph1||""}"></div>
+      <div><label>Phase 2 — conception & consultation HT (€)</label><input data-k="ph2" type="number" value="${data.ph2||""}"></div>
+      <div class="sep">Honoraires de travaux</div>
+      <div><label>Phase 3 (% de l'estimatif)</label><input data-k="ph3pct" type="number" step="0.1" value="${data.ph3pct||""}"></div>
+      <div><label>Phase 3 HT (€)</label><input class="ro" readonly id="cP3"></div>
+      <div class="sep">Totaux</div>
+      <div><label>Total HT</label><input class="ro" readonly id="cHT"></div>
+      <div><label>TVA 20 %</label><input class="ro" readonly id="cTVA"></div>
+      <div class="full"><label>Total TTC</label><input class="ro" readonly id="cTTC"></div></div>`;
+    $("#mHint").textContent="Champs phase1 / phase2 / phase3 % de OPERATIONS";
+  }
+  $("#mBody").innerHTML=h; bindForm(); calc();
+}
+function bindForm(){
+  document.querySelectorAll("#mBody [data-k]").forEach(e=>e.oninput=e.onchange=()=>{
+    form.data[e.dataset.k]=e.type==="number"?(e.value===""?0:+e.value):e.value; calc();
+  });
+  document.querySelectorAll("#mTabs .tab").forEach(t=>t.onclick=()=>{form.tab=t.dataset.t;drawForm()});
+  const sel=document.querySelector('#mBody select[data-k="immeuble"]'); if(sel&&!form.data.immeuble)form.data.immeuble=sel.value;
+}
+function nextIndice(imm){
+  const used=DB.operations.filter(o=>o.immeuble===imm).map(o=>o.indice);
+  for(const c of "ABCDEFGHIJKLMNOPQRSTUVWXYZ"){if(!used.includes(c))return c}
+  return "A1";
+}
+function calc(){
+  const d=form.data;
+  if(form.tab==="op"){
+    if(!d.indice&&d.immeuble){d.indice=nextIndice(d.immeuble);const i=document.querySelector('[data-k="indice"]');if(i)i.value=d.indice}
+    const c=$("#codeAuto");if(c){d.code=d.immeuble&&d.indice?d.immeuble+"-"+d.indice:"";c.value=d.code}
+  }
+  if(form.tab==="prop"){
+    const p3=(d.estimatif||0)*(d.ph3pct||0)/100,ht=(d.ph1||0)+(d.ph2||0)+p3;
+    $("#cP3").value=eur(p3);$("#cHT").value=eur(ht);$("#cTVA").value=eur(ht*.2);$("#cTTC").value=eur(ht*1.2);
+  }
+}
+async function saveForm(){
+  const d=form.data;
+  if(form.type==="imm"){
+    if(!d.code){return toast("Le code immeuble est obligatoire")}
+    if(DB.immeubles.some(i=>i.code===d.code))return toast("Ce code existe déjà");
+    DB.immeubles.unshift({code:d.code,adresse:d.adresse||"",syndic:d.syndic||"",gestionnaire:d.gestionnaire||"",moa:d.moa||"",lots:d.lots||""});
+    if(live())await ragicPost("immeubles",{code:d.code,adresse:d.adresse,syndic:d.syndic,gestionnaire:d.gestionnaire,moa:d.moa,lots:d.lots});
+    sel.imm=d.code;
+  }else{
+    if(!d.immeuble||!d.objet)return toast("Immeuble et objet sont obligatoires");
+    d.code=d.immeuble+"-"+d.indice;
+    const ex=DB.operations.find(o=>o.code===d.code);
+    if(ex)Object.assign(ex,d);
+    else DB.operations.unshift(op(d.code,d.immeuble,d.indice,d.objet,d.description||"",d.statut||"attente",d.dateProp||"",{ph1:d.ph1,ph2:d.ph2,ph3pct:d.ph3pct,estimatif:d.estimatif}));
+    if(live())await ragicPost("operations",{code:d.code,immeuble:d.immeuble,indice:d.indice,objet:d.objet,description:d.description,dateProp:d.dateProp,estimatif:d.estimatif,ph1:d.ph1,ph2:d.ph2,ph3pct:d.ph3pct,statut:d.statut});
+    sel.imm=d.immeuble;sel.op=d.code;
+  }
+  persist();closeForm();renderImm();renderOps();renderDetail();
+  toast(live()?"Envoyé à Ragic":"Créé en local (mode démo — rien n'est envoyé à Ragic)");
+}
+function closeForm(){$("#veil").classList.remove("on")}
+
+/* ============ Ragic (mode connecté — à valider avec la clé API) ============ */
+function ragicUrl(k){return `https://${cfg.srv||"www.ragic.com"}/${cfg.acc}/${RAGIC[k].path}`}
+async function ragicPost(kind,vals){
+  const f=RAGIC[kind].f,body=new URLSearchParams();
+  Object.entries(vals).forEach(([k,v])=>{if(f[k]&&v!==undefined&&v!=="")body.append(f[k],v)});
+  const r=await fetch(ragicUrl(kind)+"?api&v=3",{method:"POST",headers:{Authorization:"Basic "+cfg.key,"Content-Type":"application/x-www-form-urlencoded"},body});
+  if(!r.ok)throw new Error("Ragic "+r.status);
+}
+async function loadLive(){
+  try{
+    const h={Authorization:"Basic "+cfg.key};
+    const [ri,ro]=await Promise.all([
+      fetch(ragicUrl("immeubles")+"?api&v=3&limit=2000",{headers:h}).then(r=>r.json()),
+      fetch(ragicUrl("operations")+"?api&v=3&limit=2000",{headers:h}).then(r=>r.json())]);
+    const g=(r,l)=>r[l]??"";
+    DB.immeubles=Object.values(ri).map(r=>({code:g(r,"code"),adresse:g(r,"adresse"),syndic:g(r,"syndic"),gestionnaire:g(r,"gestionnaire"),moa:g(r,"maitre d'ouvrage"),lots:g(r,"Nbr Lots")}));
+    DB.operations=Object.values(ro).map(r=>op(g(r,"CODE TRAVAUX")||g(r,"Code travaux"),g(r,"Immeuble")||g(r,"immeuble"),g(r,"Indice"),g(r,"Objet"),g(r,"Description"),g(r,"Statut")||"attente",g(r,"Date proposition"),{ph1:+g(r,"phase1")||0,ph2:+g(r,"phase2")||0,ph3pct:+g(r,"phase3 %")||0,estimatif:+g(r,"Estimatif travaux HT")||0}));
+    $("#stInfo").textContent=`Ragic · ${DB.immeubles.length} immeubles · ${DB.operations.length} opérations`;
+    renderImm();renderOps();toast("Données Ragic chargées");
+  }catch(e){toast("Connexion Ragic impossible ("+e.message+") — mode démo conservé");console.error(e)}
+}
+
+/* ============ Divers ============ */
+function persist(){try{localStorage.setItem("agoaOpeDemo",JSON.stringify(DB))}catch(e){}}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
+function setMode(){
+  $("#modeDot").classList.toggle("live",live());
+  $("#modeTxt").textContent=live()?"Ragic connecté":"Mode démo";
+  $("#stInfo").textContent=live()?"Connexion Ragic":"Données de démonstration (immeubles/opérations en attente : réelles, en cours : fictives)";
+}
+
+/* Événements */
+$("#q").oninput=renderImm;
+$("#immList").onclick=e=>{const it=e.target.closest("[data-imm]");if(!it)return;sel.imm=it.dataset.imm;sel.op=null;sel.filter="tous";renderImm();renderOps();
+  $("#detail").innerHTML='<div class="placeholder"><div><div class="big">'+esc(sel.imm)+'</div><p>Choisissez une opération.</p></div></div>';
+  const first=DB.operations.filter(o=>o.immeuble===sel.imm);if(first.length===1){sel.op=first[0].code;renderOps();renderDetail()}};
+$("#opList").onclick=e=>{const it=e.target.closest("[data-op]");if(!it)return;sel.op=it.dataset.op;renderOps();renderDetail()};
+$("#filters").onclick=e=>{const b=e.target.closest("[data-f]");if(!b)return;sel.filter=b.dataset.f;renderOps()};
+$("#newImm").onclick=()=>openForm("imm");
+$("#newOp").onclick=()=>openForm("op",{immeuble:sel.imm||""});
+$("#mClose").onclick=$("#mCancel").onclick=closeForm;
+$("#mSave").onclick=saveForm;
+$("#modeBtn").onclick=()=>{$("#cSrv").value=cfg.srv;$("#cAcc").value=cfg.acc;$("#cKey").value=cfg.key;$("#veilCfg").classList.add("on")};
+$("#cClose").onclick=()=>$("#veilCfg").classList.remove("on");
+$("#cSave").onclick=()=>{cfg={srv:$("#cSrv").value.trim(),acc:$("#cAcc").value.trim()||"agoa",key:$("#cKey").value.trim()};localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg));$("#veilCfg").classList.remove("on");setMode();if(live())loadLive()};
+$("#cDemo").onclick=()=>{cfg.key="";localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg));$("#veilCfg").classList.remove("on");setMode()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#veilCfg").classList.remove("on")}if(e.ctrlKey&&e.key.toLowerCase()==="f"){e.preventDefault();$("#q").focus()}});
+
+setMode();renderImm();
+if(live())loadLive();
+</script>
+</body>
+</html>

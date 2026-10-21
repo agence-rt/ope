@@ -1,0 +1,24 @@
+{
+  "name": "agoa-ope",
+  "productName": "AGOA OPE",
+  "version": "0.1.0",
+  "description": "AGOA OPE — consultation et création des opérations (Ragic) — Agence Rémi Thollet",
+  "main": "src/main.js",
+  "author": "Agence Rémi Thollet",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
+  },
+  "dependencies": { "electron-updater": "^6.3.9" },
+  "devDependencies": { "electron": "^33.2.0", "electron-builder": "^25.1.8" },
+  "build": {
+    "appId": "fr.remithollet.agoa.ope",
+    "productName": "AGOA OPE",
+    "files": ["src/**/*", "package.json"],
+    "win": { "target": "nsis", "icon": "build/icon.ico" },
+    "nsis": { "oneClick": true, "perMachine": false, "runAfterFinish": true },
+    "publish": [{ "provider": "github", "owner": "agence-rt", "repo": "ope" }]
+  }
+}
