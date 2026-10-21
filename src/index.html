@@ -126,32 +126,40 @@ button,input,select,textarea{font:inherit;color:inherit}
 .status{height:26px;flex:none;background:var(--carte);border-top:1px solid var(--trait);display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--gris);gap:16px}
 .mono{font-family:Consolas,monospace;font-size:12px}
 @media (max-width:1100px){.app{grid-template-columns:240px 300px 1fr}}
+
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--bleu-bg);color:var(--bleu);margin:0 4px 4px 0}
+.tag.prio{background:var(--rouge-pale);color:var(--rouge)}
+.step{cursor:default}.step:hover{border-color:var(--trait)}
+.step small{color:var(--gris);margin-left:4px}
+.step.fait small{color:var(--vert)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--gris);padding:4px 8px;border-bottom:1px solid var(--trait)}
+table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
+.notes{white-space:pre-wrap;margin:0 0 10px;font-family:inherit}
+.notes b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--gris);margin-bottom:2px}
+.banner{margin:16px;padding:12px 14px;background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;color:var(--encre)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--trait);border-top-color:var(--rouge);border-radius:50%;animation:r .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes r{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <div class="titlebar">
   <div class="logo">OPE</div>
   <div class="name">AGOA OPE</div>
   <div class="sub">Opérations · Agence Rémi Thollet</div>
   <div class="spacer"></div>
-  <button class="mode" id="modeBtn" title="Paramètres de connexion Ragic"><span class="dot" id="modeDot"></span><span id="modeTxt">Mode démo</span></button>
-  </div>
-
+  <button class="btn sm" id="refresh" title="Recharger depuis Ragic (F5)">Actualiser</button>
+  <button class="mode" id="modeBtn" title="Connexion Ragic" style="margin:0 12px 0 8px"><span class="dot" id="modeDot"></span><span id="modeTxt">Non connecté</span></button>
+</div>
 <div class="app">
-  <!-- 1. Immeubles -->
   <section class="col">
     <div class="colhead">
       <h2>Immeubles <button class="btn sm ghost" id="newImm">+ Nouveau</button></h2>
-      <div class="search">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="q" placeholder="Code, adresse, syndic…" autocomplete="off" autofocus>
-      </div>
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" placeholder="Code, adresse, syndic, opération…" autocomplete="off" autofocus></div>
     </div>
     <div class="list" id="immList"></div>
   </section>
-
-  <!-- 2. Opérations de l'immeuble -->
   <section class="col">
     <div class="colhead">
       <h2><span id="opTitle">Opérations</span> <button class="btn sm ghost" id="newOp">+ Nouvelle</button></h2>
@@ -159,322 +167,328 @@ button,input,select,textarea{font:inherit;color:inherit}
     </div>
     <div class="list" id="opList"><div class="empty">Sélectionnez un immeuble.</div></div>
   </section>
-
-  <!-- 3. Fiche -->
-  <section class="col detail" id="detail">
-    <div class="placeholder"><div><div class="big">AGOA OPE</div><p>Recherchez un immeuble, puis choisissez une opération<br>pour afficher sa fiche et l'avancement des phases.</p></div></div>
-  </section>
+  <section class="col detail" id="detail"></section>
 </div>
+<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.2.0</span></div>
 
-<div class="status"><span id="stInfo">Données de démonstration</span><span class="spacer"></span><span id="stVer">v0.1.0</span></div>
+<div class="veil" id="veil"><div class="modal">
+  <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
+  <div class="tabs" id="mTabs"></div><div class="body" id="mBody"></div>
+  <footer><span class="hint" id="mHint" style="margin-right:auto"></span><button class="btn" id="mCancel">Annuler</button><button class="btn primary" id="mSave">Enregistrer dans Ragic</button></footer>
+</div></div>
 
-<!-- Modale création -->
-<div class="veil" id="veil">
-  <div class="modal">
-    <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
-    <div class="tabs" id="mTabs"></div>
-    <div class="body" id="mBody"></div>
-    <footer><span class="hint" id="mHint" style="margin-right:auto"></span><button class="btn" id="mCancel">Annuler</button><button class="btn primary" id="mSave">Créer</button></footer>
-  </div>
-</div>
-
-<!-- Modale paramètres -->
-<div class="veil" id="veilCfg">
-  <div class="modal">
-    <header><h2>Connexion Ragic</h2><button class="x" id="cClose">×</button></header>
-    <div class="body">
-      <div class="form">
-        <div><label>Serveur Ragic</label><input id="cSrv" placeholder="eu2.ragic.com"></div>
-        <div><label>Compte</label><input id="cAcc" value="agoa"></div>
-        <div class="full"><label>Clé API (stockée localement sur ce poste)</label><input id="cKey" type="password" placeholder="Clé API Ragic"></div>
-        <div class="full hint">La clé est normalement reprise du bouton CONNEXIONS du launcher. Sans clé, l'application reste en mode démo : les créations sont gardées en mémoire locale uniquement et rien n'est envoyé à Ragic.</div>
-      </div>
-    </div>
-    <footer><button class="btn" id="cDemo">Revenir en démo</button><button class="btn primary" id="cSave">Enregistrer et charger</button></footer>
-  </div>
-</div>
+<div class="veil" id="veilCfg"><div class="modal">
+  <header><h2>Connexion Ragic</h2><button class="x" id="cClose">×</button></header>
+  <div class="body"><div class="form">
+    <div><label>Serveur Ragic</label><input id="cSrv" placeholder="eu2.ragic.com"></div>
+    <div><label>Compte</label><input id="cAcc" placeholder="agoa"></div>
+    <div class="full"><label>Clé API</label><input id="cKey" type="password" placeholder="Clé API Ragic"></div>
+    <div class="full hint">La clé est normalement reprise du bouton CONNEXIONS du launcher AGOA. Ce formulaire sert à la saisir à la main (stockée sur ce poste uniquement).</div>
+  </div></div>
+  <footer><button class="btn" id="cClear">Effacer la clé</button><button class="btn primary" id="cSave">Enregistrer et charger</button></footer>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============ Correspondance avec Ragic (compte agoa) ============ */
-const RAGIC = {
-  operations: { path:"operations/10", f:{
-    code:1000295, immeuble:1000278, indice:1000279, objet:1000280, description:1000281,
-    dateProp:1000282, estimatif:1000286, ph1:1000283, ph2:1000284, ph3pct:1000285,
-    syndic:1000763, gestionnaire:1000765, statut:1003061, avancement:1001618 } },
-  immeubles: { path:"agoa/3", f:{
-    code:1000020, adresse:1000021, cp:1000833, moa:1000034, syndic:1000035,
-    gestionnaire:1000036, email:1000850, assistante:1000037, lots:2000013 } }
-};
+/* ===== Champs Ragic (compte agoa) — identifiants des feuilles OPERATIONS (operations/10) et Immeubles (agoa/3) ===== */
+const OPP="operations/10", IMP="agoa/3";
+const FO={code:1000295,immeuble:1000278,indice:1000279,objet:1000280,description:1000281,dateProp:1000282,
+  ph1:1000283,ph2:1000284,ph3pct:1000285,estimatif:1000286,valide:1000290,dateValid:1000291,
+  syndic:1000763,gestionnaire:1000765,statut:1003061,avancement:1001618,priorite:1002536,architecte:1001784,
+  totalPhases:1001644,totalFactures:1000414,subFactures:1000394,
+  dates:[["Ouverture du dossier",1001716],["Date du rapport",1001627],["Date AO",1001629],["Analyse des offres",1001630],["Assemblée générale",1002779],["Permis",1001635],["Début des travaux",1001624],["Fin des travaux",1001626]],
+  notes:[["Études",1001620],["Appel d'offres",1001754],["Analyse",1001756],["Permis",1001755],["AG",1001783],["Travaux",1003074]],
+  entreprise:1001619,montant:1001621,
+  p1:[["Visite de site",1000641],["Expertise",1000642],["Rapport",1000643]],
+  p2:[["APS",1000676],["APD",1000678],["DCE",1000680]],
+  p3:[["DPC",1000684],["MDT",1000686],["VISA",1000688],["DET",1000690],["AOR",1000692],["DOE",1000694]],
+  p3total:1002700};
+const FS={date:1000380,montant:1000489,reglee:1000597,definitive:1000443,av1:1000396,av2:1000397,av3:1000398};
+const FI={code:1000020,adresse:1000021,cp:1000833,moa:1000034,syndic:1000035,gestionnaire:1000036,email:1000850,assistante:1000037,lots:2000013};
+const LISTO=[FO.code,FO.immeuble,FO.indice,FO.objet,FO.description,FO.dateProp,FO.ph1,FO.ph2,FO.ph3pct,FO.estimatif,FO.valide,FO.syndic,FO.gestionnaire,FO.statut,FO.avancement,FO.priorite,FO.architecte];
+const LISTI=Object.values(FI);
 
-/* ============ Phases (déroulé agence) ============ */
-const PHASES = [
-  {k:"P1", label:"Phase 1 — Visite & rapport", steps:["Visite de site","Expertise","Rapport"]},
-  {k:"P2", label:"Phase 2 — Conception & consultation", steps:["APS","APD","DCE","Analyse des offres"]},
-  {k:"P3", label:"Phase 3 — Travaux", steps:["DPC","MDT","VISA","DET","AOR","DOE"]}
-];
-const ETATS=["afaire","encours","fait"];
-
-/* ============ Données de démonstration ============ */
-/* Immeubles et opérations « attente » issus de Ragic ; les opérations en cours sont fictives pour la démo. */
-let DB = {
-  immeubles:[
-    {code:"JEANNED'ARC29",adresse:"29 place Jeanne d'Arc 75013 Paris",syndic:"BR COPROPRIETE",gestionnaire:"Alexis LEMAIRE",moa:"SDC du",lots:""},
-    {code:"STJACQUES81",adresse:"81 rue du Faubourg Saint Jacques 75014 Paris",syndic:"CABINET MICHAU",gestionnaire:"Marie-Aude GIRODET",moa:"SDC du",lots:""},
-    {code:"STDIDIER55/57",adresse:"55/57 rue Saint Didier 75116 Paris",syndic:"CABINET GAURIAU",gestionnaire:"Olivier GAURIAU",moa:"SDC du",lots:""},
-    {code:"ROGER11",adresse:"11 rue Roger 75014 Paris",syndic:"CABINET MICHAU",gestionnaire:"Fabrice BOUNIOL",moa:"SDC du",lots:"10"},
-    {code:"HOFF4Bis",adresse:"4 bis rue du Sergent Hoff 75017 Paris",syndic:"ORALIA GARREAU MAILLET",gestionnaire:"François FLAMENT",moa:"SDC du",lots:""},
-    {code:"MEUNIERS5",adresse:"5 rue des Meuniers 94300 Vincennes",syndic:"FONCIA VAL DE MARNE",gestionnaire:"Jérôme COUSIN",moa:"SDC du",lots:""},
-    {code:"PHALSBOURG8(cité)",adresse:"8 cité de Phalsbourg 75014 Paris",syndic:"FONCIA PARIS RIVE DROITE",gestionnaire:"Vincent ALCOLEA",moa:"SDC du",lots:""}
-  ],
-  operations:[
-    op("JEANNED'ARC29-B1","JEANNED'ARC29","B1","TRAVAUX DE REFECTION DE LA COUR & DES BÂTIMENTS ANNEXES","Mission d'étude, appel d'offres et suivi des travaux de réfection de la cour avec étanchéité, ravalement du mur mitoyen, création d'un local poubelle conforme et reconstruction de l'annexe.","attente","2026/10/20"),
-    op("JEANNED'ARC29-B2","JEANNED'ARC29","B2","TRAVAUX DE RENOVATION DE LA LOGE ET DU SAS COUR","Rénovation de la loge et du sas d'accès à la cour et aux caves.","attente","2026/10/20"),
-    op("JEANNED'ARC29-B3","JEANNED'ARC29","B3","TRAVAUX D'ENTRETIEN ET DE MISE AUX NORMES DES CAVES","Mission d'étude, appel d'offres et suivi des travaux d'entretien et de mise aux normes des caves.","attente","2026/10/20"),
-    op("JEANNED'ARC29-B4","JEANNED'ARC29","B4","TRAVAUX DE RAVALEMENT DE LA FACADE SUR RUE","Mission d'étude, appel d'offres et suivi des travaux de ravalement de la façade sur rue.","attente","2026/10/20"),
-    op("JEANNED'ARC29-B5","JEANNED'ARC29","B5","TRAVAUX DE RAVALEMENT DE LA FACADE SUR COUR","Mission d'étude, appel d'offres et suivi des travaux de ravalement de la façade sur cour.","attente","2026/10/20"),
-    op("STJACQUES81-ZD","STJACQUES81","ZD","RENOVATION DES MENUISERIES EXTERIEURES DE LA CAGE D'ESCALIER D","Rénovation et entretien des menuiseries extérieures de la cage d'escalier D.","attente","2026/10/20"),
-    op("STJACQUES81-ZE","STJACQUES81","ZE","RENOVATION DES MENUISERIES EXTERIEURES DES CAGES D'ESCALIER A B C et D","Rénovation et entretien des menuiseries extérieures des cages A à D.","attente","2026/10/20"),
-    op("STDIDIER55/57-D","STDIDIER55/57","D","MURET RUE","Problématiques liées à la présence d'arbres accolés au muret rue.","attente",""),
-    /* fictives pour montrer l'avancement */
-    op("ROGER11-A","ROGER11","A","RAVALEMENT DES FAÇADES SUR RUE ET COUR (exemple)","Exemple fictif : mission complète étude, consultation, suivi.","cours","2026/03/12",{ph1:3200,ph2:5400,ph3pct:4.5,estimatif:180000,etats:{"P1":["fait","fait","fait"],"P2":["fait","fait","encours","afaire"],"P3":["afaire","afaire","afaire","afaire","afaire","afaire"]}}),
-    op("ROGER11-B","ROGER11","B","REFECTION DE LA TOITURE (exemple)","Exemple fictif : couverture zinc, dépose-repose des lucarnes.","cours","2026/05/02",{ph1:1800,ph2:3600,ph3pct:5,estimatif:96000,etats:{"P1":["fait","fait","fait"],"P2":["fait","fait","fait","fait"],"P3":["fait","fait","encours","encours","afaire","afaire"]}})
-  ]
-};
-function op(code,immeuble,indice,objet,description,statut,dateProp,x={}){
-  const etats=x.etats||{P1:["afaire","afaire","afaire"],P2:["afaire","afaire","afaire","afaire"],P3:["afaire","afaire","afaire","afaire","afaire","afaire"]};
-  return {code,immeuble,indice,objet,description,statut,dateProp,ph1:x.ph1||0,ph2:x.ph2||0,ph3pct:x.ph3pct||0,estimatif:x.estimatif||0,etats};
-}
-
-/* ============ État ============ */
+/* ===== Utilitaires ===== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>{const n=parseFloat(String(v??"").replace(/\s/g,"").replace(",","."));return isFinite(n)?n:0};
+const arr=v=>Array.isArray(v)?v:(v?[v]:[]);
 const eur=n=>new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n||0);
-let cfg={srv:"",acc:"agoa",key:""};
+const bb=s=>s?String(s).replace(/\[br\]\[\/br\]/g,"\n").replace(/\[li\]/g,"• ").replace(/\[\/li\]/g,"\n").replace(/\[\/?[a-z]+(=[^\]]*)?\]/gi,"").replace(/\n{3,}/g,"\n\n").trim():"";
+const toBB=s=>String(s||"").replace(/\r?\n/g,"[br][/br]");
+const pct=v=>{const t=String(v??"");if(!t.trim())return null;const n=num(t);return t.includes("%")||n>1?n:n*100};
+const IPC=window.agoa||null;
+let cfg={srv:"eu2.ragic.com",acc:"agoa",key:""};
 try{cfg={...cfg,...JSON.parse(localStorage.getItem("agoaOpeCfg")||"{}")}}catch(e){}
-const IPC=window.agoa||null;   // présent dans l'application Windows (preload.js)
-let sel={imm:null,op:null,filter:"tous"};
 const live=()=>!!cfg.key;
+let DB={imm:[],ops:[]}, sel={imm:null,op:null,filter:"ouvertes"}, cache={}, loadedAt=null;
 
-/* ============ Rendu ============ */
-function statutClass(s){return s==="attente"?"attente":s==="fini"||s==="terminé"?"fini":"cours"}
-function statutLabel(s){return ({attente:"En attente",cours:"En cours",fini:"Terminé"})[s]||s||"—"}
-function progress(o){
-  let t=0,d=0;
-  PHASES.forEach(p=>p.steps.forEach((_,i)=>{t+=2;const e=(o.etats[p.k]||[])[i];d+=e==="fait"?2:e==="encours"?1:0}));
-  return Math.round(d/t*100);
+/* ===== Accès Ragic ===== */
+const base=()=>`https://${cfg.srv||"eu2.ragic.com"}/${cfg.acc||"agoa"}`;
+async function rg(url,opt={}){
+  const o={method:opt.method||"GET",headers:{Authorization:"Basic "+cfg.key,...(opt.headers||{})},body:opt.body};
+  let r;
+  if(IPC&&IPC.ragic)r=await IPC.ragic({url,method:o.method,headers:o.headers,body:o.body?String(o.body):undefined});
+  else{const x=await fetch(url,o);r={ok:x.ok,status:x.status,json:await x.json().catch(()=>({}))}}
+  if(!r.ok)throw new Error("Ragic "+r.status+(r.status===401||r.status===403?" (clé refusée)":""));
+  if(r.json&&r.json.status==="ERROR")throw new Error(r.json.msg||"Erreur Ragic");
+  return r.json;
 }
-function phasePct(o,p){
-  const a=o.etats[p.k]||[];let d=0;p.steps.forEach((_,i)=>{d+=a[i]==="fait"?2:a[i]==="encours"?1:0});
-  return Math.round(d/(p.steps.length*2)*100);
+const rows=j=>Object.values(j||{}).filter(v=>v&&typeof v==="object"&&!Array.isArray(v)&&("_ragicId" in v));
+async function pageAll(path,ids,onProg){
+  const out=[];let off=0;
+  for(;;){
+    const j=await rg(`${base()}/${path}?api&v=3&naming=EID&limit=1000&offset=${off}`+ids.map(i=>"&fetchDomainIds="+i).join(""));
+    const r=rows(j);out.push(...r);if(onProg)onProg(out.length);
+    if(r.length<1000)break;off+=1000;
+  }
+  return out;
 }
+const mapImm=r=>({id:r._ragicId,code:r[FI.code]||"",adresse:r[FI.adresse]||"",cp:r[FI.cp]||"",moa:r[FI.moa]||"",syndic:r[FI.syndic]||"",gestionnaire:r[FI.gestionnaire]||"",email:r[FI.email]||"",assistante:r[FI.assistante]||"",lots:r[FI.lots]||""});
+const mapOp=r=>({id:r._ragicId,immeuble:r[FO.immeuble]||"",indice:r[FO.indice]||"",code:r[FO.code]||((r[FO.immeuble]||"")+"-"+(r[FO.indice]||"")),
+  objet:r[FO.objet]||"",description:r[FO.description]||"",dateProp:r[FO.dateProp]||"",ph1:num(r[FO.ph1]),ph2:num(r[FO.ph2]),ph3pct:num(r[FO.ph3pct]),
+  estimatif:num(r[FO.estimatif]),valide:r[FO.valide]||"",syndic:r[FO.syndic]||"",gestionnaire:r[FO.gestionnaire]||"",
+  statut:r[FO.statut]||"attente",avancement:arr(r[FO.avancement]),priorite:arr(r[FO.priorite]),architecte:r[FO.architecte]||""});
+async function loadAll(){
+  if(!live()){render();return}
+  $("#stInfo").innerHTML='<span class="spin"></span>Chargement depuis Ragic…';
+  try{
+    const ri=await pageAll(IMP,LISTI,n=>$("#stInfo").innerHTML=`<span class="spin"></span>Immeubles : ${n}…`);
+    const ro=await pageAll(OPP,LISTO,n=>$("#stInfo").innerHTML=`<span class="spin"></span>Opérations : ${n}…`);
+    DB.imm=ri.map(mapImm).filter(i=>i.code).sort((a,b)=>a.code.localeCompare(b.code,"fr"));
+    DB.ops=ro.map(mapOp).filter(o=>o.immeuble).sort((a,b)=>b.id-a.id);
+    cache={};loadedAt=new Date();
+    toast(`Ragic : ${DB.imm.length} immeubles, ${DB.ops.length} opérations`);
+  }catch(e){console.error(e);toast("Chargement impossible : "+e.message)}
+  render();
+}
+
+/* ===== Rendu ===== */
+const clos=s=>/^(clos|clôtur|termin|fini)/i.test(s||"");
+const attente=s=>/^attente/i.test(s||"");
+const sClass=s=>clos(s)?"fini":attente(s)?"attente":"cours";
+const sLabel=s=>attente(s)?"En attente":(s||"—");
+function render(){setMode();renderImm();renderOps();renderDetail()}
+function setMode(){
+  $("#modeDot").classList.toggle("live",live());
+  $("#modeTxt").textContent=live()?"Ragic connecté":"Non connecté";
+  $("#stInfo").textContent=live()?`Ragic · ${cfg.acc} · ${DB.imm.length} immeubles · ${DB.ops.length} opérations`+(loadedAt?` · chargé à ${loadedAt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`:""):"Aucune connexion Ragic";
+}
+function opsOf(code){return DB.ops.filter(o=>o.immeuble===code)}
 function renderImm(){
+  const el=$("#immList");
+  if(!live()){el.innerHTML='<div class="banner">Connexion Ragic absente.<br>Ouvrez <b>CONNEXIONS</b> dans le launcher AGOA, ou saisissez la clé via le bouton en haut à droite.</div>';return}
   const q=$("#q").value.trim().toLowerCase();
-  const rows=DB.immeubles.filter(i=>!q||[i.code,i.adresse,i.syndic,i.gestionnaire].join(" ").toLowerCase().includes(q));
-  $("#immList").innerHTML=rows.length?rows.map(i=>{
-    const ops=DB.operations.filter(o=>o.immeuble===i.code);
-    const enc=ops.filter(o=>o.statut!=="fini").length;
-    return `<div class="item ${sel.imm===i.code?"sel":""}" data-imm="${esc(i.code)}"><div><div class="t">${esc(i.code)}</div><div class="s">${esc(i.adresse)}</div><div class="s">${esc(i.syndic)}</div></div>${enc?`<span class="badge count">${enc}</span>`:""}</div>`;
-  }).join(""):`<div class="empty">Aucun immeuble.<br><button class="btn sm" id="emptyNew" style="margin-top:8px">Créer « ${esc($("#q").value)} »</button></div>`;
-  const en=$("#emptyNew"); if(en) en.onclick=()=>openForm("imm",{code:$("#q").value.toUpperCase().replace(/\s+/g,"")});
+  const byOp=q?new Set(DB.ops.filter(o=>o.code.toLowerCase().includes(q)||o.objet.toLowerCase().includes(q)).map(o=>o.immeuble)):new Set();
+  const list=DB.imm.filter(i=>!q||byOp.has(i.code)||[i.code,i.adresse,i.syndic,i.gestionnaire].join(" ").toLowerCase().includes(q)).slice(0,200);
+  el.innerHTML=list.length?list.map(i=>{const n=opsOf(i.code).filter(o=>!clos(o.statut)).length;
+    return `<div class="item ${sel.imm===i.code?"sel":""}" data-imm="${esc(i.code)}"><div><div class="t">${esc(i.code)}</div><div class="s">${esc(i.adresse)}</div><div class="s">${esc(i.syndic)}</div></div>${n?`<span class="badge count">${n}</span>`:""}</div>`}).join("")
+    :`<div class="empty">Aucun immeuble${q?` pour « ${esc(q)} »`:""}.${q?`<br><button class="btn sm" id="emptyNew" style="margin-top:8px">Créer cet immeuble</button>`:""}</div>`;
+  const en=$("#emptyNew");if(en)en.onclick=()=>openForm("imm",{code:$("#q").value.toUpperCase().replace(/\s+/g,"")});
 }
+const FILTERS=[["ouvertes","Ouvertes"],["attente","En attente"],["clos","Clos"],["tous","Toutes"]];
+const passF=o=>sel.filter==="tous"||(sel.filter==="ouvertes"&&!clos(o.statut))||(sel.filter==="attente"&&attente(o.statut))||(sel.filter==="clos"&&clos(o.statut));
 function renderOps(){
-  const i=sel.imm; const el=$("#opList");
+  const el=$("#opList"),i=sel.imm;
   if(!i){el.innerHTML='<div class="empty">Sélectionnez un immeuble.</div>';$("#filters").innerHTML="";$("#opTitle").textContent="Opérations";return}
   $("#opTitle").textContent="Opérations · "+i;
-  const all=DB.operations.filter(o=>o.immeuble===i);
-  $("#filters").innerHTML=[["tous","Toutes"],["cours","En cours"],["attente","En attente"],["fini","Terminées"]].map(([k,l])=>`<button class="btn sm ${sel.filter===k?"primary":""}" data-f="${k}">${l}</button>`).join("");
-  const rows=all.filter(o=>sel.filter==="tous"||o.statut===sel.filter);
-  el.innerHTML=rows.length?rows.map(o=>`<div class="item ${sel.op===o.code?"sel":""}" data-op="${esc(o.code)}"><div style="min-width:0;flex:1"><div class="t">${esc(o.code)} <span class="chip ${statutClass(o.statut)}">${statutLabel(o.statut)}</span></div><div class="s">${esc(o.objet)}</div><div class="bar" style="margin-top:6px;height:5px"><i style="width:${progress(o)}%"></i></div></div></div>`).join(""):`<div class="empty">Aucune opération pour ce filtre.</div>`;
-}
-function renderDetail(){
-  const o=DB.operations.find(x=>x.code===sel.op); const el=$("#detail");
-  if(!o)return;
-  const im=DB.immeubles.find(x=>x.code===o.immeuble)||{};
-  const ph3=(o.estimatif||0)*(o.ph3pct||0)/100;
-  const ht=(o.ph1||0)+(o.ph2||0)+ph3, tva=ht*.2;
-  el.innerHTML=`<div class="wrap">
-    <div class="dh"><div style="flex:1"><h1>${esc(o.code)} <span class="chip ${statutClass(o.statut)}">${statutLabel(o.statut)}</span></h1><div class="obj">${esc(o.objet)}</div></div>
-      <button class="btn" id="editOp">Modifier</button><button class="btn primary" id="newProp">Proposition d'honoraires</button></div>
-    <div class="card"><h3>Avancement</h3>
-      <div class="global"><b style="font-size:20px;color:var(--rouge)">${progress(o)} %</b><div class="bar"><i style="width:${progress(o)}%"></i></div></div>
-      ${PHASES.map(p=>`<div class="phase"><div class="ph"><b>${p.label}</b><span class="pct">${phasePct(o,p)} %</span></div>
-        <div class="steps">${p.steps.map((s,i)=>`<div class="step ${(o.etats[p.k]||[])[i]||"afaire"}" data-p="${p.k}" data-i="${i}">${s}</div>`).join("")}</div></div>`).join("")}
-      <div class="hint">Cliquer sur une étape : à faire → en cours → fait.</div></div>
-    <div class="card"><h3>Opération</h3><div class="kv">
-      ${kv("Code",o.code)}${kv("Indice",o.indice)}${kv("Date de proposition",o.dateProp)}${kv("Immeuble",o.immeuble)}${kv("Syndic",im.syndic)}${kv("Gestionnaire",im.gestionnaire)}
-      <div style="grid-column:1/-1"><label>Description</label><div>${esc(o.description)||'<span class="muted">—</span>'}</div></div></div></div>
-    <div class="card"><h3>Honoraires</h3><div class="money">
-      <div><label>Phase 1</label><b>${eur(o.ph1)}</b></div><div><label>Phase 2</label><b>${eur(o.ph2)}</b></div>
-      <div><label>Phase 3 (${o.ph3pct||0} %)</label><b>${eur(ph3)}</b></div><div><label>Total HT</label><b>${eur(ht)}</b></div>
-      <div><label>Total TTC</label><b>${eur(ht+tva)}</b></div></div>
-      <div class="hint">Estimatif travaux HT : ${eur(o.estimatif)}</div></div>
-  </div>`;
-  $("#editOp").onclick=()=>openForm("op",o);
-  $("#newProp").onclick=()=>openForm("op",{...o,_prop:true});
-  el.querySelectorAll(".step").forEach(s=>s.onclick=()=>{
-    const a=o.etats[s.dataset.p],i=+s.dataset.i;a[i]=ETATS[(ETATS.indexOf(a[i]||"afaire")+1)%3];
-    if(o.statut==="attente"&&progress(o)>0)o.statut="cours";
-    persist();renderOps();renderDetail();
-    toast(live()?"Avancement modifié (envoi Ragic à brancher)":"Avancement modifié (démo)");
-  });
+  const all=opsOf(i);
+  $("#filters").innerHTML=FILTERS.map(([k,l])=>`<button class="btn sm ${sel.filter===k?"primary":""}" data-f="${k}">${l}</button>`).join("");
+  const r=all.filter(passF);
+  el.innerHTML=r.length?r.map(o=>`<div class="item ${sel.op===o.id?"sel":""}" data-op="${o.id}"><div style="min-width:0;flex:1"><div class="t">${esc(o.code)} <span class="chip ${sClass(o.statut)}">${esc(sLabel(o.statut))}</span></div><div class="s">${esc(o.objet)}</div>${o.avancement.length?`<div style="margin-top:4px">${o.avancement.map(a=>`<span class="tag">${esc(a)}</span>`).join("")}</div>`:""}</div></div>`).join("")
+    :`<div class="empty">${all.length?"Aucune opération pour ce filtre.":"Aucune opération sur cet immeuble."}</div>`;
 }
 function kv(l,v){return `<div><label>${l}</label><div>${v?esc(v):'<span class="muted">—</span>'}</div></div>`}
 
-/* ============ Formulaires de création ============ */
+/* ===== Fiche opération ===== */
+async function fetchFull(id){
+  if(cache[id])return cache[id];
+  const j=await rg(`${base()}/${OPP}/${id}?api&v=3&naming=EID&subtables=1`);
+  const r=rows(j)[0]||Object.values(j)[0];cache[id]=r;return r;
+}
+function phaseData(r){
+  const sub=Object.values(r["_subtable_"+FO.subFactures]||{}).filter(x=>x&&typeof x==="object");
+  const av=k=>{let m=null;sub.forEach(x=>{const p=pct(x[FS[k]]);if(p!==null&&(m===null||p>m))m=p});return m};
+  const steps=(l)=>l.map(([n,id])=>({n,v:num(r[id])}));
+  const s1=steps(FO.p1),s2=steps(FO.p2),s3=steps(FO.p3);
+  const sum=a=>a.reduce((t,x)=>t+x.v,0);
+  const est=num(r[FO.estimatif]),p3pct=num(r[FO.ph3pct]);
+  const P=[
+    {label:"Phase 1 — Visite & rapport",steps:s1,hono:num(r[FO.ph1])||sum(s1),av:av("av1")},
+    {label:"Phase 2 — Conception & consultation",steps:s2,hono:num(r[FO.ph2])||sum(s2),av:av("av2")},
+    {label:"Phase 3 — Travaux",steps:s3,hono:est*p3pct||num(r[FO.p3total])||sum(s3),av:av("av3")}];
+  const tot=P.reduce((t,p)=>t+p.hono,0);
+  let global=null;
+  if(P.some(p=>p.av!==null)&&tot)global=P.reduce((t,p)=>t+p.hono*Math.min(100,p.av||0),0)/tot;
+  else if(num(r[FO.totalPhases]))global=Math.min(100,num(r[FO.totalFactures])/num(r[FO.totalPhases])*100);
+  return {P,global,sub,tot};
+}
+async function renderDetail(){
+  const el=$("#detail");
+  if(!live()){el.innerHTML='<div class="placeholder"><div><div class="big">AGOA OPE</div><p>Connexion à Ragic requise.<br>Ouvrez CONNEXIONS dans le launcher AGOA<br>ou utilisez le bouton en haut à droite.</p></div></div>';return}
+  const o=DB.ops.find(x=>x.id===sel.op);
+  if(!o){el.innerHTML=`<div class="placeholder"><div><div class="big">${esc(sel.imm||"AGOA OPE")}</div><p>${sel.imm?"Choisissez une opération.":"Recherchez un immeuble, puis choisissez une opération<br>pour afficher sa fiche et l'avancement des phases."}</p></div></div>`;return}
+  el.innerHTML=`<div class="wrap"><div class="dh"><div><h1>${esc(o.code)}</h1><div class="obj">${esc(o.objet)}</div></div></div><div class="card"><span class="spin"></span>Chargement de la fiche…</div></div>`;
+  let r;try{r=await fetchFull(o.id)}catch(e){el.innerHTML=`<div class="wrap"><div class="card">Lecture impossible : ${esc(e.message)}</div></div>`;return}
+  if(sel.op!==o.id)return;
+  const im=DB.imm.find(x=>x.code===o.immeuble)||{};
+  const pd=phaseData(r),G=pd.global;
+  const ht=pd.tot,tva=ht*.2;
+  const dates=FO.dates.map(([l,id])=>[l,r[id]]).filter(x=>x[1]);
+  const notes=FO.notes.map(([l,id])=>[l,bb(r[id])]).filter(x=>x[1]);
+  const fac=pd.sub.filter(x=>x[FS.montant]||x[FS.date]);
+  el.innerHTML=`<div class="wrap">
+    <div class="dh"><div style="flex:1"><h1>${esc(o.code)} <span class="chip ${sClass(o.statut)}">${esc(sLabel(o.statut))}</span></h1><div class="obj">${esc(o.objet)}</div></div>
+      <button class="btn" id="editOp">Modifier les honoraires</button></div>
+    <div class="card"><h3>Avancement</h3>
+      ${o.avancement.length||o.priorite.length?`<div style="margin-bottom:10px">${o.priorite.map(a=>`<span class="tag prio">${esc(a)}</span>`).join("")}${o.avancement.map(a=>`<span class="tag">${esc(a)}</span>`).join("")}</div>`:""}
+      ${G!==null?`<div class="global"><b style="font-size:20px;color:var(--rouge)">${Math.round(G)} %</b><div class="bar"><i style="width:${G}%"></i></div><span class="hint" style="margin:0">facturé</span></div>`:'<div class="hint" style="margin:0 0 8px">Aucune facture enregistrée sur cette opération.</div>'}
+      ${pd.P.map(p=>{const a=p.av===null?0:Math.min(100,p.av);return `<div class="phase"><div class="ph"><b>${p.label}</b><span class="hint" style="margin:0">${eur(p.hono)} HT</span><span class="pct">${p.av===null?"—":Math.round(a)+" %"}</span></div>
+        <div class="bar" style="margin-bottom:8px"><i style="width:${a}%"></i></div>
+        <div class="steps">${p.steps.map(s=>`<div class="step ${a>=100&&s.v?"fait":""}">${s.n}${s.v?`<small>${eur(s.v)}</small>`:""}</div>`).join("")}</div></div>`}).join("")}
+      <div class="hint">Avancement = honoraires facturés par phase (sous-table Factures de la fiche Ragic).</div></div>
+    <div class="card"><h3>Opération</h3><div class="kv">
+      ${kv("Immeuble",o.immeuble)}${kv("Adresse",im.adresse)}${kv("Syndic",o.syndic||im.syndic)}${kv("Gestionnaire",o.gestionnaire||im.gestionnaire)}
+      ${kv("Architecte",o.architecte)}${kv("Date de proposition",o.dateProp)}${kv("Proposition validée",o.valide+(r[FO.dateValid]?" · "+r[FO.dateValid]:""))}
+      <div style="grid-column:1/-1"><label>Description</label><div style="white-space:pre-wrap">${esc(bb(o.description))||'<span class="muted">—</span>'}</div></div></div></div>
+    ${dates.length?`<div class="card"><h3>Jalons</h3><div class="kv">${dates.map(([l,v])=>kv(l,v)).join("")}</div></div>`:""}
+    <div class="card"><h3>Honoraires</h3><div class="money">
+      <div><label>Phase 1</label><b>${eur(pd.P[0].hono)}</b></div><div><label>Phase 2</label><b>${eur(pd.P[1].hono)}</b></div>
+      <div><label>Phase 3${o.ph3pct?` (${+(o.ph3pct*100).toFixed(2)} %)`:""}</label><b>${eur(pd.P[2].hono)}</b></div>
+      <div><label>Total HT</label><b>${eur(ht)}</b></div><div><label>Total TTC</label><b>${eur(ht+tva)}</b></div></div>
+      <div class="hint">Estimatif travaux HT : ${eur(o.estimatif)}</div></div>
+    ${r[FO.entreprise]?`<div class="card"><h3>Entreprise retenue</h3><div class="kv">${kv("Entreprise",r[FO.entreprise])}${kv("Montant travaux",num(r[FO.montant])?eur(num(r[FO.montant])):"")}</div></div>`:""}
+    ${fac.length?`<div class="card"><h3>Factures</h3><table class="t"><tr><th>Date</th><th>Montant HT</th><th>Phase 1</th><th>Phase 2</th><th>Phase 3</th><th>Réglée</th></tr>${fac.map(x=>`<tr><td>${esc(x[FS.date])}</td><td>${x[FS.montant]?eur(num(x[FS.montant])):""}</td><td>${esc(x[FS.av1])}</td><td>${esc(x[FS.av2])}</td><td>${esc(x[FS.av3])}</td><td>${esc(x[FS.reglee])}</td></tr>`).join("")}</table></div>`:""}
+    ${notes.length?`<div class="card"><h3>Notes</h3>${notes.map(([l,t])=>`<pre class="notes"><b>${l}</b>${esc(t)}</pre>`).join("")}</div>`:""}
+  </div>`;
+  $("#editOp").onclick=()=>openForm("op",{...o,_edit:true,tab:"prop"});
+}
+
+/* ===== Formulaires ===== */
 let form={type:null,data:{},tab:"op"};
-function openForm(type,data={}){
-  form={type,data:{...data},tab:data._prop?"prop":type};
-  $("#veil").classList.add("on"); drawForm();
+function openForm(type,data={}){form={type,data:{...data},tab:data.tab||type};$("#veil").classList.add("on");drawForm()}
+function statuts(){return [...new Set(["attente",...DB.ops.map(o=>o.statut)])].filter(Boolean)}
+function nextIndice(imm){
+  const L="ABCDEFGHIJKLMNOPQRSTUVWXYZ",u=opsOf(imm).map(o=>String(o.indice).toUpperCase());
+  const hi=Math.max(-1,...u.filter(x=>x.length===1&&L.includes(x)).map(x=>L.indexOf(x)));
+  return hi<25?L[hi+1]:"A1";
 }
 function drawForm(){
-  const {type,data}=form;
-  const tabs=type==="imm"?[["imm","Immeuble"]]:[["op","Opération"],["prop","Proposition d'honoraires"]];
+  const {type,data}=form,edit=!!data._edit;
+  const tabs=type==="imm"?[]:(edit?[["prop","Honoraires"]]:[["op","Opération"],["prop","Honoraires"]]);
   $("#mTabs").innerHTML=tabs.length>1?tabs.map(([k,l])=>`<div class="tab ${form.tab===k?"on":""}" data-t="${k}">${l}</div>`).join(""):"";
-  $("#mTitle").textContent=type==="imm"?"Nouvel immeuble":(data.code&&DB.operations.some(o=>o.code===data.code)?"Modifier l'opération":"Nouvelle opération");
-  const immOpts=DB.immeubles.map(i=>`<option ${data.immeuble===i.code?"selected":""}>${esc(i.code)}</option>`).join("");
+  $("#mTitle").textContent=type==="imm"?"Nouvel immeuble":edit?"Modifier les honoraires — "+data.code:"Nouvelle opération";
+  const io=DB.imm.map(i=>`<option ${data.immeuble===i.code?"selected":""}>${esc(i.code)}</option>`).join("");
   let h="";
-  if(form.tab==="imm"){
-    h=`<div class="form">
-      <div><label>Code immeuble</label><input data-k="code" value="${esc(data.code)}" placeholder="ex. ROGER11"></div>
-      <div><label>Maître d'ouvrage</label><input data-k="moa" value="${esc(data.moa||"SDC du")}"></div>
-      <div class="full"><label>Adresse</label><input data-k="adresse" value="${esc(data.adresse)}"></div>
-      <div><label>Syndic</label><input data-k="syndic" value="${esc(data.syndic)}"></div>
-      <div><label>Gestionnaire</label><input data-k="gestionnaire" value="${esc(data.gestionnaire)}"></div>
-      <div><label>Nombre de lots</label><input data-k="lots" type="number" value="${esc(data.lots)}"></div></div>`;
-    $("#mHint").textContent="Base : BASE DE DONNÉES › Immeubles";
+  if(type==="imm"){
+    h=`<div class="form"><div><label>Code immeuble</label><input data-k="code" value="${esc(data.code)}" placeholder="ex. ROGER11"></div><div><label>Maître d'ouvrage</label><input data-k="moa" value="${esc(data.moa||"SDC du")}"></div>
+    <div class="full"><label>Adresse</label><input data-k="adresse" value="${esc(data.adresse)}"></div>
+    <div><label>Code postal</label><input data-k="cp" value="${esc(data.cp)}"></div><div><label>Nombre de lots</label><input data-k="lots" type="number" value="${esc(data.lots)}"></div>
+    <div><label>Syndic</label><input data-k="syndic" value="${esc(data.syndic)}"></div><div><label>Gestionnaire</label><input data-k="gestionnaire" value="${esc(data.gestionnaire)}"></div></div>`;
+    $("#mHint").textContent="Feuille Immeubles (BASE DE DONNÉES)";
   }else if(form.tab==="op"){
-    h=`<div class="form">
-      <div><label>Immeuble</label><select data-k="immeuble">${immOpts}</select></div>
-      <div><label>Indice</label><input data-k="indice" value="${esc(data.indice)}" placeholder="ex. A, B1, ZE"></div>
-      <div class="full"><label>Objet</label><input data-k="objet" value="${esc(data.objet)}" placeholder="TRAVAUX DE …"></div>
-      <div class="full"><label>Description</label><textarea data-k="description" placeholder="Mission d'étude, appel d'offres et suivi des travaux de …">${esc(data.description)}</textarea></div>
-      <div><label>Statut</label><select data-k="statut">${["attente","cours","fini"].map(s=>`<option value="${s}" ${(data.statut||"attente")===s?"selected":""}>${statutLabel(s)}</option>`).join("")}</select></div>
-      <div><label>Code travaux (auto)</label><input class="ro" readonly id="codeAuto" value="${esc(data.code||"")}"></div></div>`;
-    $("#mHint").textContent="Base : OPERATIONS";
+    h=`<div class="form"><div><label>Immeuble</label><select data-k="immeuble">${io}</select></div><div><label>Indice</label><input data-k="indice" value="${esc(data.indice)}" placeholder="A, B1, ZE…"></div>
+    <div class="full"><label>Objet</label><input data-k="objet" value="${esc(data.objet)}" placeholder="TRAVAUX DE …"></div>
+    <div class="full"><label>Description</label><textarea data-k="description" placeholder="Mission d'étude, appel d'offres et suivi des travaux de …">${esc(data.description)}</textarea></div>
+    <div><label>Statut</label><select data-k="statut">${statuts().map(s=>`<option value="${esc(s)}" ${(data.statut||"attente")===s?"selected":""}>${esc(sLabel(s))}</option>`).join("")}</select></div>
+    <div><label>Code travaux</label><input class="ro" readonly id="codeAuto" value="${esc(data.code||"")}"></div></div>`;
+    $("#mHint").textContent="Feuille OPERATIONS";
   }else{
-    h=`<div class="form">
-      <div><label>Date de proposition</label><input data-k="dateProp" value="${esc(data.dateProp||new Date().toISOString().slice(0,10).replace(/-/g,"/"))}"></div>
-      <div><label>Estimatif travaux HT (€)</label><input data-k="estimatif" type="number" value="${data.estimatif||""}"></div>
-      <div class="sep">Honoraires d'études</div>
-      <div><label>Phase 1 — visite & rapport HT (€)</label><input data-k="ph1" type="number" value="${data.ph1||""}"></div>
-      <div><label>Phase 2 — conception & consultation HT (€)</label><input data-k="ph2" type="number" value="${data.ph2||""}"></div>
-      <div class="sep">Honoraires de travaux</div>
-      <div><label>Phase 3 (% de l'estimatif)</label><input data-k="ph3pct" type="number" step="0.1" value="${data.ph3pct||""}"></div>
-      <div><label>Phase 3 HT (€)</label><input class="ro" readonly id="cP3"></div>
-      <div class="sep">Totaux</div>
-      <div><label>Total HT</label><input class="ro" readonly id="cHT"></div>
-      <div><label>TVA 20 %</label><input class="ro" readonly id="cTVA"></div>
-      <div class="full"><label>Total TTC</label><input class="ro" readonly id="cTTC"></div></div>`;
+    const p3=data.ph3pct!==undefined?+(data.ph3pct*100).toFixed(2):"";
+    h=`<div class="form"><div><label>Date de proposition</label><input data-k="dateProp" value="${esc(data.dateProp||new Date().toISOString().slice(0,10).replace(/-/g,"/"))}"></div>
+    <div><label>Estimatif travaux HT (€)</label><input data-k="estimatif" type="number" value="${data.estimatif||""}"></div>
+    <div class="sep">Honoraires d'études</div>
+    <div><label>Phase 1 HT (€)</label><input data-k="ph1" type="number" value="${data.ph1||""}"></div><div><label>Phase 2 HT (€)</label><input data-k="ph2" type="number" value="${data.ph2||""}"></div>
+    <div class="sep">Honoraires de travaux</div>
+    <div><label>Phase 3 (% de l'estimatif)</label><input data-k="ph3pct" type="number" step="0.1" value="${p3}" data-pct="1"></div><div><label>Phase 3 HT (€)</label><input class="ro" readonly id="cP3"></div>
+    <div class="sep">Totaux</div>
+    <div><label>Total HT</label><input class="ro" readonly id="cHT"></div><div><label>TVA 20 %</label><input class="ro" readonly id="cTVA"></div><div class="full"><label>Total TTC</label><input class="ro" readonly id="cTTC"></div></div>`;
     $("#mHint").textContent="Champs phase1 / phase2 / phase3 % de OPERATIONS";
   }
-  $("#mBody").innerHTML=h; bindForm(); calc();
+  $("#mBody").innerHTML=h;bindForm();calc();
 }
 function bindForm(){
   document.querySelectorAll("#mBody [data-k]").forEach(e=>e.oninput=e.onchange=()=>{
-    form.data[e.dataset.k]=e.type==="number"?(e.value===""?0:+e.value):e.value; calc();
+    let v=e.value;if(e.type==="number")v=v===""?0:+v;
+    form.data[e.dataset.k]=e.dataset.pct?v/100:v;
+    if(e.dataset.k==="immeuble"){form.data.indice=nextIndice(v);const i=document.querySelector('[data-k="indice"]');if(i)i.value=form.data.indice}
+    calc();
   });
   document.querySelectorAll("#mTabs .tab").forEach(t=>t.onclick=()=>{form.tab=t.dataset.t;drawForm()});
-  const sel=document.querySelector('#mBody select[data-k="immeuble"]'); if(sel&&!form.data.immeuble)form.data.immeuble=sel.value;
-}
-function nextIndice(imm){
-  const used=DB.operations.filter(o=>o.immeuble===imm).map(o=>o.indice);
-  for(const c of "ABCDEFGHIJKLMNOPQRSTUVWXYZ"){if(!used.includes(c))return c}
-  return "A1";
+  const s=document.querySelector('#mBody select[data-k="immeuble"]');
+  if(s&&!form.data.immeuble){form.data.immeuble=s.value}
 }
 function calc(){
   const d=form.data;
   if(form.tab==="op"){
-    if(!d.indice&&d.immeuble){d.indice=nextIndice(d.immeuble);const i=document.querySelector('[data-k="indice"]');if(i)i.value=d.indice}
+    if(d.immeuble&&!d.indice){d.indice=nextIndice(d.immeuble);const i=document.querySelector('[data-k="indice"]');if(i)i.value=d.indice}
     const c=$("#codeAuto");if(c){d.code=d.immeuble&&d.indice?d.immeuble+"-"+d.indice:"";c.value=d.code}
   }
-  if(form.tab==="prop"){
-    const p3=(d.estimatif||0)*(d.ph3pct||0)/100,ht=(d.ph1||0)+(d.ph2||0)+p3;
+  if(form.tab==="prop"&&$("#cP3")){
+    const p3=(d.estimatif||0)*(d.ph3pct||0),ht=(d.ph1||0)+(d.ph2||0)+p3;
     $("#cP3").value=eur(p3);$("#cHT").value=eur(ht);$("#cTVA").value=eur(ht*.2);$("#cTTC").value=eur(ht*1.2);
   }
 }
+function post(path,vals){
+  const b=new URLSearchParams();Object.entries(vals).forEach(([k,v])=>{if(v!==undefined&&v!==null&&v!=="")b.append(k,v)});
+  return rg(`${base()}/${path}?api&v=3`,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:b.toString()});
+}
 async function saveForm(){
-  const d=form.data;
-  if(form.type==="imm"){
-    if(!d.code){return toast("Le code immeuble est obligatoire")}
-    if(DB.immeubles.some(i=>i.code===d.code))return toast("Ce code existe déjà");
-    DB.immeubles.unshift({code:d.code,adresse:d.adresse||"",syndic:d.syndic||"",gestionnaire:d.gestionnaire||"",moa:d.moa||"",lots:d.lots||""});
-    if(live())await ragicPost("immeubles",{code:d.code,adresse:d.adresse,syndic:d.syndic,gestionnaire:d.gestionnaire,moa:d.moa,lots:d.lots});
-    sel.imm=d.code;
-  }else{
-    if(!d.immeuble||!d.objet)return toast("Immeuble et objet sont obligatoires");
-    d.code=d.immeuble+"-"+d.indice;
-    const ex=DB.operations.find(o=>o.code===d.code);
-    if(ex)Object.assign(ex,d);
-    else DB.operations.unshift(op(d.code,d.immeuble,d.indice,d.objet,d.description||"",d.statut||"attente",d.dateProp||"",{ph1:d.ph1,ph2:d.ph2,ph3pct:d.ph3pct,estimatif:d.estimatif}));
-    if(live())await ragicPost("operations",{code:d.code,immeuble:d.immeuble,indice:d.indice,objet:d.objet,description:d.description,dateProp:d.dateProp,estimatif:d.estimatif,ph1:d.ph1,ph2:d.ph2,ph3pct:d.ph3pct,statut:d.statut});
-    sel.imm=d.immeuble;sel.op=d.code;
-  }
-  persist();closeForm();renderImm();renderOps();renderDetail();
-  toast(live()?"Envoyé à Ragic":"Créé en local (mode démo — rien n'est envoyé à Ragic)");
-}
-function closeForm(){$("#veil").classList.remove("on")}
-
-/* ============ Ragic (mode connecté — à valider avec la clé API) ============ */
-function ragicUrl(k){return `https://${cfg.srv||"eu2.ragic.com"}/${cfg.acc}/${RAGIC[k].path}`}
-async function ragicFetch(url,opt={}){
-  if(IPC&&IPC.ragic)return IPC.ragic({url,method:opt.method||"GET",headers:opt.headers||{},body:opt.body?String(opt.body):undefined});
-  const r=await fetch(url,opt);return {ok:r.ok,status:r.status,json:await r.json().catch(()=>({}))};
-}
-async function ragicPost(kind,vals){
-  const f=RAGIC[kind].f,body=new URLSearchParams();
-  Object.entries(vals).forEach(([k,v])=>{if(f[k]&&v!==undefined&&v!=="")body.append(f[k],v)});
-  const r=await ragicFetch(ragicUrl(kind)+"?api&v=3",{method:"POST",headers:{Authorization:"Basic "+cfg.key,"Content-Type":"application/x-www-form-urlencoded"},body});
-  if(!r.ok)throw new Error("Ragic "+r.status);
-}
-async function loadLive(){
+  const d=form.data,btn=$("#mSave");
   try{
-    const h={Authorization:"Basic "+cfg.key};
-    const [ri,ro]=await Promise.all([
-      ragicFetch(ragicUrl("immeubles")+"?api&v=3&limit=2000",{headers:h}).then(r=>{if(!r.ok)throw new Error("Ragic "+r.status);return r.json}),
-      ragicFetch(ragicUrl("operations")+"?api&v=3&limit=2000",{headers:h}).then(r=>{if(!r.ok)throw new Error("Ragic "+r.status);return r.json})]);
-    const g=(r,l)=>r[l]??"";
-    DB.immeubles=Object.values(ri).map(r=>({code:g(r,"code"),adresse:g(r,"adresse"),syndic:g(r,"syndic"),gestionnaire:g(r,"gestionnaire"),moa:g(r,"maitre d'ouvrage"),lots:g(r,"Nbr Lots")}));
-    DB.operations=Object.values(ro).map(r=>op(g(r,"CODE TRAVAUX")||g(r,"Code travaux"),g(r,"Immeuble")||g(r,"immeuble"),g(r,"Indice"),g(r,"Objet"),g(r,"Description"),g(r,"Statut")||"attente",g(r,"Date proposition"),{ph1:+g(r,"phase1")||0,ph2:+g(r,"phase2")||0,ph3pct:+g(r,"phase3 %")||0,estimatif:+g(r,"Estimatif travaux HT")||0}));
-    $("#stInfo").textContent=`Ragic · ${DB.immeubles.length} immeubles · ${DB.operations.length} opérations`;
-    renderImm();renderOps();toast("Données Ragic chargées");
-  }catch(e){toast("Connexion Ragic impossible ("+e.message+") — mode démo conservé");console.error(e)}
+    if(form.type==="imm"){
+      if(!d.code)return toast("Le code immeuble est obligatoire");
+      if(DB.imm.some(i=>i.code===d.code))return toast("Ce code existe déjà");
+      btn.disabled=true;
+      const j=await post(IMP,{[FI.code]:d.code,[FI.adresse]:d.adresse,[FI.cp]:d.cp,[FI.moa]:d.moa,[FI.syndic]:d.syndic,[FI.gestionnaire]:d.gestionnaire,[FI.lots]:d.lots});
+      DB.imm.unshift({id:+j.rv,code:d.code,adresse:d.adresse||"",cp:d.cp||"",moa:d.moa||"",syndic:d.syndic||"",gestionnaire:d.gestionnaire||"",email:"",assistante:"",lots:d.lots||""});
+      sel.imm=d.code;sel.op=null;
+    }else if(d._edit){
+      btn.disabled=true;
+      await post(`${OPP}/${d.id}`,{[FO.dateProp]:d.dateProp,[FO.ph1]:d.ph1,[FO.ph2]:d.ph2,[FO.ph3pct]:d.ph3pct,[FO.estimatif]:d.estimatif});
+      Object.assign(DB.ops.find(o=>o.id===d.id),{dateProp:d.dateProp,ph1:d.ph1||0,ph2:d.ph2||0,ph3pct:d.ph3pct||0,estimatif:d.estimatif||0});
+      delete cache[d.id];
+    }else{
+      if(!d.immeuble||!d.objet||!d.indice)return toast("Immeuble, indice et objet sont obligatoires");
+      d.code=d.immeuble+"-"+d.indice;
+      if(DB.ops.some(o=>o.code===d.code))return toast("Cette opération existe déjà : "+d.code);
+      btn.disabled=true;
+      const j=await post(OPP,{[FO.code]:d.code,[FO.immeuble]:d.immeuble,[FO.indice]:d.indice,[FO.objet]:d.objet,[FO.description]:toBB(d.description),
+        [FO.statut]:d.statut||"attente",[FO.dateProp]:d.dateProp||new Date().toISOString().slice(0,10).replace(/-/g,"/"),[FO.ph1]:d.ph1,[FO.ph2]:d.ph2,[FO.ph3pct]:d.ph3pct,[FO.estimatif]:d.estimatif});
+      const full=await rg(`${base()}/${OPP}/${j.rv}?api&v=3&naming=EID`);
+      const rec=rows(full)[0];DB.ops.unshift(rec?mapOp(rec):{id:+j.rv,immeuble:d.immeuble,indice:d.indice,code:d.code,objet:d.objet,description:d.description||"",dateProp:"",ph1:d.ph1||0,ph2:d.ph2||0,ph3pct:d.ph3pct||0,estimatif:d.estimatif||0,valide:"",syndic:"",gestionnaire:"",statut:d.statut||"attente",avancement:[],priorite:[],architecte:""});
+      sel.imm=d.immeuble;sel.op=+j.rv;
+    }
+    closeForm();render();toast("Enregistré dans Ragic");
+  }catch(e){console.error(e);toast("Échec de l'enregistrement : "+e.message)}
+  finally{btn.disabled=false}
 }
+const closeForm=()=>$("#veil").classList.remove("on");
 
-/* ============ Divers ============ */
-function persist(){try{localStorage.setItem("agoaOpeDemo",JSON.stringify(DB))}catch(e){}}
-function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),2600)}
+/* ===== Divers ===== */
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),3200)}
 async function initConnections(){
-  // Clés partagées du launcher (CONNEXIONS) : variables AGOA_RAGIC_* ou fichier chiffré
-  try{
-    const c=IPC&&IPC.connections?await IPC.connections():null;
-    if(c&&c.ragic&&c.ragic.key){cfg={srv:c.ragic.host||"eu2.ragic.com",acc:c.ragic.apname||"agoa",key:c.ragic.key};}
+  try{const c=IPC&&IPC.connections?await IPC.connections():null;
+    if(c&&c.ragic&&c.ragic.key)cfg={srv:c.ragic.host||"eu2.ragic.com",acc:c.ragic.apname||"agoa",key:c.ragic.key};
   }catch(e){}
 }
-function setMode(){
-  $("#modeDot").classList.toggle("live",live());
-  $("#modeTxt").textContent=live()?"Ragic connecté":"Mode démo";
-  $("#stInfo").textContent=live()?"Connexion Ragic":"Données de démonstration (immeubles/opérations en attente : réelles, en cours : fictives)";
-}
-
-/* Événements */
 $("#q").oninput=renderImm;
-$("#immList").onclick=e=>{const it=e.target.closest("[data-imm]");if(!it)return;sel.imm=it.dataset.imm;sel.op=null;sel.filter="tous";renderImm();renderOps();
-  $("#detail").innerHTML='<div class="placeholder"><div><div class="big">'+esc(sel.imm)+'</div><p>Choisissez une opération.</p></div></div>';
-  const first=DB.operations.filter(o=>o.immeuble===sel.imm);if(first.length===1){sel.op=first[0].code;renderOps();renderDetail()}};
-$("#opList").onclick=e=>{const it=e.target.closest("[data-op]");if(!it)return;sel.op=it.dataset.op;renderOps();renderDetail()};
+$("#immList").onclick=e=>{const it=e.target.closest("[data-imm]");if(!it)return;sel.imm=it.dataset.imm;sel.op=null;
+  const o=opsOf(sel.imm).filter(passF);if(o.length===1)sel.op=o[0].id;render()};
+$("#opList").onclick=e=>{const it=e.target.closest("[data-op]");if(!it)return;sel.op=+it.dataset.op;renderOps();renderDetail()};
 $("#filters").onclick=e=>{const b=e.target.closest("[data-f]");if(!b)return;sel.filter=b.dataset.f;renderOps()};
-$("#newImm").onclick=()=>openForm("imm");
-$("#newOp").onclick=()=>openForm("op",{immeuble:sel.imm||""});
-$("#mClose").onclick=$("#mCancel").onclick=closeForm;
-$("#mSave").onclick=saveForm;
+$("#newImm").onclick=()=>live()?openForm("imm"):toast("Connexion Ragic requise");
+$("#newOp").onclick=()=>live()?openForm("op",{immeuble:sel.imm||""}):toast("Connexion Ragic requise");
+$("#mClose").onclick=$("#mCancel").onclick=closeForm;$("#mSave").onclick=saveForm;
+$("#refresh").onclick=loadAll;
 $("#modeBtn").onclick=()=>{$("#cSrv").value=cfg.srv;$("#cAcc").value=cfg.acc;$("#cKey").value=cfg.key;$("#veilCfg").classList.add("on")};
 $("#cClose").onclick=()=>$("#veilCfg").classList.remove("on");
-$("#cSave").onclick=()=>{cfg={srv:$("#cSrv").value.trim(),acc:$("#cAcc").value.trim()||"agoa",key:$("#cKey").value.trim()};localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg));$("#veilCfg").classList.remove("on");setMode();if(live())loadLive()};
-$("#cDemo").onclick=()=>{cfg.key="";localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg));$("#veilCfg").classList.remove("on");setMode()};
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#veilCfg").classList.remove("on")}if(e.ctrlKey&&e.key.toLowerCase()==="f"){e.preventDefault();$("#q").focus()}});
-
-(async()=>{await initConnections();setMode();renderImm();if(live())loadLive();})();
+$("#cSave").onclick=()=>{cfg={srv:$("#cSrv").value.trim()||"eu2.ragic.com",acc:$("#cAcc").value.trim()||"agoa",key:$("#cKey").value.trim()};
+  try{localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg))}catch(e){}$("#veilCfg").classList.remove("on");loadAll()};
+$("#cClear").onclick=()=>{cfg.key="";try{localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg))}catch(e){}DB={imm:[],ops:[]};$("#veilCfg").classList.remove("on");render()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#veilCfg").classList.remove("on")}
+  if(e.ctrlKey&&e.key.toLowerCase()==="f"){e.preventDefault();$("#q").focus()}if(e.key==="F5"){e.preventDefault();loadAll()}});
+(async()=>{await initConnections();render();loadAll()})();
 </script>
 </body>
 </html>
