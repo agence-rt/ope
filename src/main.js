@@ -1,7 +1,8 @@
-const { app, BrowserWindow, shell, ipcMain } = require("electron");
+const { app, BrowserWindow, shell, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { execFileSync } = require("child_process");
+const { findOpFolder, detectRoot } = require("./dropbox");
 
 // Connexions partagées du launcher : variables d'environnement, sinon fichier chiffré (DPAPI)
 function agoaConnections() {
@@ -27,6 +28,35 @@ ipcMain.handle("agoa:ragic", async (_e, req) => {
   let json = {};
   try { json = await r.json(); } catch (err) {}
   return { ok: r.ok, status: r.status, json };
+});
+
+
+// ---- Dossier Dropbox des opérations (réglage mémorisé par poste) ----
+const settingsFile = () => path.join(app.getPath("userData"), "settings.json");
+function readSettings() { try { return JSON.parse(fs.readFileSync(settingsFile(), "utf8")); } catch (e) { return {}; } }
+function writeSettings(o) { try { fs.writeFileSync(settingsFile(), JSON.stringify(o, null, 2)); } catch (e) {} }
+function opsRoot() {
+  const r = readSettings().opsRoot;
+  if (r && fs.existsSync(r)) return r;
+  return detectRoot();
+}
+async function chooseRoot(win) {
+  const r = await dialog.showOpenDialog(win, { title: "Dossier 01-OPERATIONS de la Dropbox", properties: ["openDirectory"] });
+  if (r.canceled || !r.filePaths[0]) return null;
+  writeSettings({ ...readSettings(), opsRoot: r.filePaths[0] });
+  return r.filePaths[0];
+}
+ipcMain.handle("agoa:opsRoot", () => opsRoot());
+ipcMain.handle("agoa:chooseOpsRoot", (e) => chooseRoot(BrowserWindow.fromWebContents(e.sender)));
+ipcMain.handle("agoa:openFolder", async (e, code) => {
+  let root = opsRoot();
+  if (!root) root = await chooseRoot(BrowserWindow.fromWebContents(e.sender));
+  if (!root) return { ok: false, reason: "root" };
+  const { dir, exists } = findOpFolder(root, code);
+  if (!dir) return { ok: false, reason: "code" };
+  if (!exists) return { ok: false, reason: "missing", path: dir };
+  const err = await shell.openPath(dir);
+  return err ? { ok: false, reason: "open", path: dir, error: err } : { ok: true, path: dir };
 });
 
 function createWindow() {

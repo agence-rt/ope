@@ -150,6 +150,9 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
 .ii{margin-bottom:8px}.ii label{display:block;font-size:11px;color:var(--gris-clair);text-transform:uppercase;letter-spacing:.05em}
 .ii div{font-weight:500;word-break:break-word}.ii div small{display:block;color:var(--gris);font-weight:400}
 .ii.code div{font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--rouge)}
+.dir{flex:none;border:0;background:transparent;color:var(--gris);padding:5px;border-radius:6px;cursor:pointer;align-self:flex-start;line-height:0}
+.dir:hover{background:var(--gris-bg);color:var(--rouge)}
+.dir svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -180,7 +183,7 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
   </section>
   <section class="col detail" id="detail"></section>
 </div>
-<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.3.0</span></div>
+<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.3.1</span></div>
 
 <div class="veil" id="veil"><div class="modal">
   <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
@@ -194,6 +197,7 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
     <div><label>Serveur Ragic</label><input id="cSrv" placeholder="eu2.ragic.com"></div>
     <div><label>Compte</label><input id="cAcc" placeholder="agoa"></div>
     <div class="full"><label>Clé API</label><input id="cKey" type="password" placeholder="Clé API Ragic"></div>
+    <div class="full"><label>Dossier des opérations (Dropbox, 01-OPERATIONS)</label><div style="display:flex;gap:8px"><input id="cRoot" readonly placeholder="Détection automatique" style="flex:1"><button class="btn" id="cRootBtn" type="button">Choisir…</button></div></div>
     <div class="full hint">La clé est normalement reprise du bouton CONNEXIONS du launcher AGOA. Ce formulaire sert à la saisir à la main (stockée sur ce poste uniquement).</div>
   </div></div>
   <footer><button class="btn" id="cClear">Effacer la clé</button><button class="btn primary" id="cSave">Enregistrer et charger</button></footer>
@@ -322,7 +326,7 @@ function renderOps(){
   const all=opsOf(i);
   $("#filters").innerHTML=FILTERS.map(([k,l])=>`<button class="btn sm ${sel.filter===k?"primary":""}" data-f="${k}">${l}</button>`).join("");
   const r=all.filter(passF);
-  el.innerHTML=r.length?r.map(o=>`<div class="item ${sel.op===o.id?"sel":""}" data-op="${o.id}"><div style="min-width:0;flex:1"><div class="t">${esc(o.code)} <span class="chip ${sClass(o.statut)}">${esc(sLabel(o.statut))}</span></div><div class="s">${esc(o.objet)}</div>${o.avancement.length?`<div style="margin-top:4px">${o.avancement.map(a=>`<span class="tag">${esc(a)}</span>`).join("")}</div>`:""}</div></div>`).join("")
+  el.innerHTML=r.length?r.map(o=>`<div class="item ${sel.op===o.id?"sel":""}" data-op="${o.id}"><div style="min-width:0;flex:1"><div class="t">${esc(o.code)} <span class="chip ${sClass(o.statut)}">${esc(sLabel(o.statut))}</span></div><div class="s">${esc(o.objet)}</div>${o.avancement.length?`<div style="margin-top:4px">${o.avancement.map(a=>`<span class="tag">${esc(a)}</span>`).join("")}</div>`:""}</div><button class="dir" data-dir="${esc(o.code)}" title="Ouvrir le dossier Dropbox"><svg viewBox="0 0 24 24"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.2l2 2.2h8.8A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/></svg></button></div>`).join("")
     :`<div class="empty">${all.length?"Aucune opération pour ce filtre.":"Aucune opération sur cet immeuble."}</div>`;
 }
 function kv(l,v){return `<div><label>${l}</label><div>${v?esc(v):'<span class="muted">—</span>'}</div></div>`}
@@ -505,13 +509,23 @@ $("#qClr").onclick=()=>{$("#q").value="";syncClr();renderImm();$("#q").focus()};
 $("#q").onkeydown=e=>{if(e.key==="Escape"&&$("#q").value){e.stopPropagation();$("#qClr").click()}};
 $("#immList").onclick=e=>{const it=e.target.closest("[data-imm]");if(!it)return;sel.imm=it.dataset.imm;sel.op=null;
   const o=opsOf(sel.imm).filter(passF);if(o.length===1)sel.op=o[0].id;render()};
-$("#opList").onclick=e=>{const it=e.target.closest("[data-op]");if(!it)return;sel.op=+it.dataset.op;renderOps();renderDetail()};
+async function openDir(code){
+  if(!(IPC&&IPC.openFolder))return toast("Ouverture du dossier : disponible dans l'application Windows");
+  const r=await IPC.openFolder(code);
+  if(r.ok)return;
+  if(r.reason==="missing")toast("Dossier introuvable : "+r.path,8000);
+  else if(r.reason==="root")toast("Dossier 01-OPERATIONS non défini (réglage dans « Ragic connecté »)",6000);
+  else toast("Impossible d'ouvrir le dossier"+(r.path?" : "+r.path:""),6000);
+}
+$("#opList").onclick=e=>{const d=e.target.closest("[data-dir]");if(d){e.stopPropagation();openDir(d.dataset.dir);return}
+  const it=e.target.closest("[data-op]");if(!it)return;sel.op=+it.dataset.op;renderOps();renderDetail()};
 $("#filters").onclick=e=>{const b=e.target.closest("[data-f]");if(!b)return;sel.filter=b.dataset.f;renderOps()};
 $("#newImm").onclick=()=>live()?openForm("imm"):toast("Connexion Ragic requise");
 $("#newOp").onclick=()=>live()?openForm("op",{immeuble:sel.imm||""}):toast("Connexion Ragic requise");
 $("#mClose").onclick=$("#mCancel").onclick=closeForm;$("#mSave").onclick=saveForm;
 $("#refresh").onclick=loadAll;
-$("#modeBtn").onclick=()=>{$("#cSrv").value=cfg.srv;$("#cAcc").value=cfg.acc;$("#cKey").value=cfg.key;$("#veilCfg").classList.add("on")};
+$("#cRootBtn").onclick=async()=>{if(IPC&&IPC.chooseOpsRoot){const r=await IPC.chooseOpsRoot();if(r)$("#cRoot").value=r}};
+$("#modeBtn").onclick=async()=>{if(IPC&&IPC.opsRoot){try{$("#cRoot").value=(await IPC.opsRoot())||""}catch(e){}}$("#cSrv").value=cfg.srv;$("#cAcc").value=cfg.acc;$("#cKey").value=cfg.key;$("#veilCfg").classList.add("on")};
 $("#cClose").onclick=()=>$("#veilCfg").classList.remove("on");
 $("#cSave").onclick=()=>{cfg={srv:$("#cSrv").value.trim()||"eu2.ragic.com",acc:$("#cAcc").value.trim()||"agoa",key:$("#cKey").value.trim()};
   try{localStorage.setItem("agoaOpeCfg",JSON.stringify(cfg))}catch(e){}$("#veilCfg").classList.remove("on");loadAll()};
