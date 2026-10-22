@@ -140,6 +140,16 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
 .banner{margin:16px;padding:12px 14px;background:var(--orange-bg);border:1px solid var(--orange);border-radius:8px;color:var(--encre)}
 .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--trait);border-top-color:var(--rouge);border-radius:50%;animation:r .7s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes r{to{transform:rotate(360deg)}}
+.search input{padding-right:34px}
+.search .clr{position:absolute;right:7px;top:7px;width:22px;height:22px;border:0;border-radius:50%;background:var(--gris-bg);color:var(--gris);cursor:pointer;display:none;font-size:14px;line-height:22px;padding:0}
+.search .clr:hover{background:var(--trait);color:var(--encre)}
+.search.has .clr{display:block}
+.immInfo{flex:none;max-height:48%;overflow:auto;border-top:1px solid var(--encre);background:var(--fond);padding:12px 16px 14px}
+.immInfo h3{margin:0 0 8px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--gris);display:flex;justify-content:space-between}
+.immInfo .nm{font-weight:700;font-size:15px;margin-bottom:8px}
+.ii{margin-bottom:8px}.ii label{display:block;font-size:11px;color:var(--gris-clair);text-transform:uppercase;letter-spacing:.05em}
+.ii div{font-weight:500;word-break:break-word}.ii div small{display:block;color:var(--gris);font-weight:400}
+.ii.code div{font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--rouge)}
 </style>
 </head>
 <body>
@@ -156,9 +166,10 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
     <div class="colhead">
       <h2>Immeubles <button class="btn sm ghost" id="newImm">+ Nouveau</button></h2>
       <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="q" placeholder="Code, adresse, syndic, opération…" autocomplete="off" autofocus></div>
+      <input id="q" placeholder="Code, adresse, syndic, opération…" autocomplete="off" autofocus><button class="clr" id="qClr" title="Effacer (Échap)" tabindex="-1">×</button></div>
     </div>
     <div class="list" id="immList"></div>
+    <div class="immInfo" id="immInfo"></div>
   </section>
   <section class="col">
     <div class="colhead">
@@ -169,7 +180,7 @@ table.t td{padding:6px 8px;border-bottom:1px solid var(--trait)}
   </section>
   <section class="col detail" id="detail"></section>
 </div>
-<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.2.1</span></div>
+<div class="status"><span id="stInfo"></span><span class="spacer"></span><span id="stVer">v0.3.0</span></div>
 
 <div class="veil" id="veil"><div class="modal">
   <header><h2 id="mTitle">Nouveau</h2><button class="x" id="mClose">×</button></header>
@@ -204,7 +215,8 @@ const FO={code:1000295,immeuble:1000278,indice:1000279,objet:1000280,description
   p3:[["DPC",1000684],["MDT",1000686],["VISA",1000688],["DET",1000690],["AOR",1000692],["DOE",1000694]],
   p3total:1002700};
 const FS={date:1000380,montant:1000489,reglee:1000597,definitive:1000443,av1:1000396,av2:1000397,av3:1000398};
-const FI={code:1000020,adresse:1000021,cp:1000833,moa:1000034,syndic:1000035,gestionnaire:1000036,email:1000850,assistante:1000037,lots:2000013};
+const FI={code:1000020,adresse:1000021,cp:1000833,moa:1000034,syndic:1000035,gestionnaire:1000036,email:1000850,assistante:1000037,lots:2000013,
+  codePorte:1000038,loge:1000039,cs:1000040,adrSyndic:1000852,telSyndic:1000853,mobGest:1000906,mailAssist:1000851,mobAssist:1000907};
 const LISTO=[FO.code,FO.immeuble,FO.indice,FO.objet,FO.description,FO.dateProp,FO.ph1,FO.ph2,FO.ph3pct,FO.estimatif,FO.valide,FO.syndic,FO.gestionnaire,FO.statut,FO.avancement,FO.priorite,FO.architecte];
 const LISTI=Object.values(FI);
 
@@ -246,7 +258,7 @@ async function pageAll(path,ids,onProg){
   }
   return out;
 }
-const mapImm=r=>({id:r._ragicId,code:r[FI.code]||"",adresse:r[FI.adresse]||"",cp:r[FI.cp]||"",moa:r[FI.moa]||"",syndic:r[FI.syndic]||"",gestionnaire:r[FI.gestionnaire]||"",email:r[FI.email]||"",assistante:r[FI.assistante]||"",lots:r[FI.lots]||""});
+const mapImm=r=>({id:r._ragicId,code:r[FI.code]||"",adresse:r[FI.adresse]||"",cp:r[FI.cp]||"",moa:r[FI.moa]||"",syndic:r[FI.syndic]||"",gestionnaire:r[FI.gestionnaire]||"",email:r[FI.email]||"",assistante:r[FI.assistante]||"",lots:r[FI.lots]||"",codePorte:r[FI.codePorte]||"",loge:r[FI.loge]||"",cs:r[FI.cs]||"",adrSyndic:r[FI.adrSyndic]||"",telSyndic:r[FI.telSyndic]||"",mobGest:r[FI.mobGest]||"",mailAssist:r[FI.mailAssist]||"",mobAssist:r[FI.mobAssist]||""});
 const mapOp=r=>({id:r._ragicId,immeuble:r[FO.immeuble]||"",indice:r[FO.indice]||"",code:r[FO.code]||((r[FO.immeuble]||"")+"-"+(r[FO.indice]||"")),
   objet:r[FO.objet]||"",description:r[FO.description]||"",dateProp:r[FO.dateProp]||"",ph1:num(r[FO.ph1]),ph2:num(r[FO.ph2]),ph3pct:num(r[FO.ph3pct]),
   estimatif:num(r[FO.estimatif]),valide:r[FO.valide]||"",syndic:r[FO.syndic]||"",gestionnaire:r[FO.gestionnaire]||"",
@@ -270,7 +282,7 @@ const clos=s=>/^(clos|clôtur|termin|fini)/i.test(s||"");
 const attente=s=>/^attente/i.test(s||"");
 const sClass=s=>clos(s)?"fini":attente(s)?"attente":"cours";
 const sLabel=s=>attente(s)?"En attente":(s||"—");
-function render(){setMode();renderImm();renderOps();renderDetail()}
+function render(){setMode();renderImm();renderImmInfo();renderOps();renderDetail()}
 function setMode(){
   $("#modeDot").classList.toggle("live",live());
   $("#modeTxt").textContent=live()?"Ragic connecté":"Non connecté";
@@ -287,6 +299,19 @@ function renderImm(){
     return `<div class="item ${sel.imm===i.code?"sel":""}" data-imm="${esc(i.code)}"><div><div class="t">${esc(i.code)}</div><div class="s">${esc(i.adresse)}</div><div class="s">${esc(i.syndic)}</div></div>${n?`<span class="badge count">${n}</span>`:""}</div>`}).join("")
     :`<div class="empty">Aucun immeuble${q?` pour « ${esc(q)} »`:""}.${q?`<br><button class="btn sm" id="emptyNew" style="margin-top:8px">Créer cet immeuble</button>`:""}</div>`;
   const en=$("#emptyNew");if(en)en.onclick=()=>openForm("imm",{code:$("#q").value.toUpperCase().replace(/\s+/g,"")});
+}
+function renderImmInfo(){
+  const el=$("#immInfo"),i=DB.imm.find(x=>x.code===sel.imm);
+  if(!i){el.innerHTML='<h3>Immeuble</h3><div class="hint" style="margin:0">Sélectionnez un immeuble pour afficher ses informations.</div>';return}
+  const row=(l,v,sub)=>v||sub?`<div class="ii"><label>${l}</label><div>${esc(v)}${sub?`<small>${sub}</small>`:""}</div></div>`:"";
+  const ln=a=>a.filter(Boolean).map(esc).join(" · ");
+  el.innerHTML=`<h3>Immeuble</h3><div class="nm">${esc(i.code)}</div>
+    ${row("Adresse",i.adresse)}
+    ${row("Syndic",i.syndic,ln([i.adrSyndic,i.telSyndic]))}
+    ${row("Gestionnaire",i.gestionnaire,ln([i.mobGest,i.email]))}
+    ${row("Assistant(e)",i.assistante,ln([i.mobAssist,i.mailAssist]))}
+    ${i.codePorte?`<div class="ii code"><label>Code d'accès</label><div>${esc(i.codePorte)}</div></div>`:""}
+    ${row("Contact loge",i.loge)}${row("Contact CS",i.cs)}${row("Lots",i.lots)}`;
 }
 const FILTERS=[["ouvertes","Ouvertes"],["attente","En attente"],["clos","Clos"],["tous","Toutes"]];
 const passF=o=>sel.filter==="tous"||(sel.filter==="ouvertes"&&!clos(o.statut))||(sel.filter==="attente"&&attente(o.statut))||(sel.filter==="clos"&&clos(o.statut));
@@ -350,7 +375,6 @@ async function renderDetail(){
         <div class="steps">${p.steps.map(s=>`<div class="step ${a>=100&&s.v?"fait":""}">${s.n}${s.v?`<small>${eur(s.v)}</small>`:""}</div>`).join("")}</div></div>`}).join("")}
       <div class="hint">Avancement = honoraires facturés par phase (sous-table Factures de la fiche Ragic).</div></div>
     <div class="card"><h3>Opération</h3><div class="kv">
-      ${kv("Immeuble",o.immeuble)}${kv("Adresse",im.adresse)}${kv("Syndic",o.syndic||im.syndic)}${kv("Gestionnaire",o.gestionnaire||im.gestionnaire)}
       ${kv("Architecte",o.architecte)}${kv("Date de proposition",o.dateProp)}${kv("Proposition validée",o.valide+(r[FO.dateValid]?" · "+r[FO.dateValid]:""))}
       <div style="grid-column:1/-1"><label>Description</label><div style="white-space:pre-wrap">${esc(bb(o.description))||'<span class="muted">—</span>'}</div></div></div></div>
     ${dates.length?`<div class="card"><h3>Jalons</h3><div class="kv">${dates.map(([l,v])=>kv(l,v)).join("")}</div></div>`:""}
@@ -433,7 +457,7 @@ function calc(){
 }
 function post(path,vals){
   const b=new URLSearchParams();Object.entries(vals).forEach(([k,v])=>{if(v!==undefined&&v!==null&&v!=="")b.append(k,v)});
-  return rg(`${base()}/${path}?api&v=3`,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:b.toString()});
+  return rg(`${base()}/${path}?api&v=3&doFormula=true&doLinkLoad=true&doDefaultValue=true`,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:b.toString()});
 }
 async function saveForm(){
   const d=form.data,btn=$("#mSave");
@@ -462,19 +486,23 @@ async function saveForm(){
       sel.imm=d.immeuble;sel.op=+j.rv;
     }
     closeForm();render();toast("Enregistré dans Ragic");
-  }catch(e){console.error(e);toast("Échec de l'enregistrement : "+e.message)}
+  }catch(e){console.error(e);toast("Échec de l'enregistrement : "+e.message+" (cliquer pour fermer)",20000)}
   finally{btn.disabled=false}
 }
 const closeForm=()=>$("#veil").classList.remove("on");
 
 /* ===== Divers ===== */
-function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),3200)}
+function toast(m,ms=3200){const t=$("#toast");t.textContent=m;t.classList.add("on");t.style.pointerEvents=ms>5000?"auto":"none";clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),ms)}
+$("#toast").onclick=()=>$("#toast").classList.remove("on");
 async function initConnections(){
   try{const c=IPC&&IPC.connections?await IPC.connections():null;
     if(c&&c.ragic&&c.ragic.key)cfg={srv:c.ragic.host||"eu2.ragic.com",acc:c.ragic.apname||"agoa",key:c.ragic.key};
   }catch(e){}
 }
-$("#q").oninput=renderImm;
+const syncClr=()=>$(".search").classList.toggle("has",!!$("#q").value);
+$("#q").oninput=()=>{syncClr();renderImm()};
+$("#qClr").onclick=()=>{$("#q").value="";syncClr();renderImm();$("#q").focus()};
+$("#q").onkeydown=e=>{if(e.key==="Escape"&&$("#q").value){e.stopPropagation();$("#qClr").click()}};
 $("#immList").onclick=e=>{const it=e.target.closest("[data-imm]");if(!it)return;sel.imm=it.dataset.imm;sel.op=null;
   const o=opsOf(sel.imm).filter(passF);if(o.length===1)sel.op=o[0].id;render()};
 $("#opList").onclick=e=>{const it=e.target.closest("[data-op]");if(!it)return;sel.op=+it.dataset.op;renderOps();renderDetail()};
